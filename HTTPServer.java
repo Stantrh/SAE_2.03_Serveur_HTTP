@@ -4,6 +4,50 @@ import java.net.*;
 public class HTTPServer {
     public static void main(String[] args) throws Exception {
         try{
+
+            BufferedReader bfRXML = new BufferedReader(new FileReader("./config.xml")); 
+            String ligne = bfRXML.readLine();
+            boolean ouvertureWebConfTrouve = false;
+            boolean fermetureWebConfTrouve = false;
+            // Au cas où il y a des sauts de ligne inutiles au début du fichier
+            while(ligne != null && !ouvertureWebConfTrouve){
+                if(ligne.equals("<webconf>"))
+                    ouvertureWebConfTrouve = true;
+                bfRXML.readLine();
+            }
+            // Après avoir trouvé la balise webconf indiquant le début des lignes xml, on traite chaque ligne à l'aide de notre méthode parseXMLLine de la classe XML
+            while(ligne != null && !fermetureWebConfTrouve){
+                if(ligne.equals("</webconf>"))
+                    fermetureWebConfTrouve = false;
+                else{
+                    String[] tabStrLigneC = XML.parseXMLLine(ligne); // Un tableau de la forme : [intituleXML, valeur]
+                    String intituleXML = tabStrLigneC[0];
+                    String valeur = tabStrLigneC[1];
+                    switch (intituleXML){
+                        case "port":
+                            this.port = Integer.parseInt(valeur);
+                            break;
+                        case "root":
+                            this.root = valeur;
+                            break;
+                        case "accept":
+                            this.addrAutorisees.add(valeur);
+                            break;
+                        case "reject":
+                            this.addrInterdites.add(valeur);
+                            break;
+                        case "acceslog":
+                            this.accessLog(valeur);
+                            break;
+                        case "errorlog":
+                            this.errorLog(valeur);
+                            break;
+                    }
+
+                }
+            }
+
+            bfRXML.close();
             // Création du serveur socket à partir du numéro de port passé en ligne
             // d'arguments (ou pas donc 80 par défaut)
             int port;
@@ -38,7 +82,7 @@ public class HTTPServer {
                 // client (navigateur pour le coup)
                 // On a donc accès à la requête du client
                 BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-                String ligne = reader.readLine(); // Première ligne de la requête du type : GET / HTTP/1.1
+                ligne = reader.readLine(); // Première ligne de la requête du type : GET / HTTP/1.1
                 // champs séparés par des espaces " "
 
                 System.out.println("Requête du client : " + ligne); // Requête du client
@@ -104,4 +148,6 @@ public class HTTPServer {
             return "";
         }
     }
+
+    
 }
