@@ -1,5 +1,3 @@
-package org.example;
-
 import java.io.*;
 import java.net.*;
 
@@ -44,7 +42,7 @@ public class MiniWeb {
 
                 // Si le client accède au serveur via http://ip:80 sans spécifier de page, alors on lui retourne l'index de base
                 if(l[1].equals("/")){
-                    l[1] = "ressources/index.html";
+                    l[1] = "/index.html";
                 }
                 // On renvoie au navigateur que sa requête est valide
                 out.println("HTTP/1.1 200 OK");
