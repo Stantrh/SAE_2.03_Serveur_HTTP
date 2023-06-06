@@ -1,0 +1,8 @@
+<port>xyz</port> !-- Le port d’écoute du serveur
+<root>chemin absolu</root> !-- Le répertoire où se situe les fichiers du site web
+<accept>@IP/n</accept> !-- accepte toute requête provenant du réseau de l’adresse
+IP donnée
+<reject>@IP/n</reject> !-- refuse toute requête provenant du réseau de l’adresse IP
+donnée
+<acceslog>chemin absolu</accesslog>
+<errorlog>chemin absolu</errorlog>

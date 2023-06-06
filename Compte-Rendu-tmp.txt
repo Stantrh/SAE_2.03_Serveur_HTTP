@@ -1,0 +1,2 @@
+Pour pouvoir afficher les images, j'ai du enlever le BufferedReader et utiliser un DataOutputStream qui lui lit les octets.
+
