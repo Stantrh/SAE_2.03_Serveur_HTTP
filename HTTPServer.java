@@ -259,22 +259,18 @@ public class HTTPServer {
         }
     }
 
-    private void ecrireDansFichTxt(String line, String cheminFichDest) {
-        try {
-            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(cheminFichDest, true)); // l'argument true
-                                                                                                      // au constructeur
-                                                                                                      // FileWriter
-                                                                                                      // permet l'ajout
-                                                                                                      // de la ligne à
-                                                                                                      // la suite de ce
-                                                                                                      // qui est déjà
-                                                                                                      // dans le fichier
+    private void ecrireDansFichTxt(String line, String cheminFichDest){
+        try{
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(cheminFichDest, true)); // l'argument true au constructeur FileWriter permet l'ajout de la ligne à la suite de ce qui est déjà dans le fichier
             bufferedWriter.write(line);
             bufferedWriter.close();
-        } catch (IOException e) {
-            System.err.println("Erreur écriture fichier texte");
-            ;
+        } catch (IOException e){
+            System.err.println("Erreur écriture fichier texte");;
         }
+    }
+
+    public long getMemoireThread(){
+        return Runtime.getRuntime().freeMemory();
     }
 
 }
