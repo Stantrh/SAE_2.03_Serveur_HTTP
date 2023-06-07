@@ -48,8 +48,6 @@ public class ComparateurIP{
             if(appartientTmp){
                 trouvee = true;
             }
-        
-            
         i++;
         } 
         return trouvee;

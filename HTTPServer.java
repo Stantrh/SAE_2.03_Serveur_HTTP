@@ -52,6 +52,10 @@ public class HTTPServer {
             String ligne = bfRXML.readLine();
             boolean ouvertureWebConfTrouve = false; // --> <webconf>
             boolean fermetureWebConfTrouve = false; // --> </webconf>
+
+            this.resAutorises = new ArrayList<String>();
+            this.resInterdits = new ArrayList<String>();
+
             // Au cas où il y a des sauts de ligne inutiles au début du fichier
             while (ligne != null && !ouvertureWebConfTrouve) {
                 if (ligne.equals("<webconf>"))
@@ -116,7 +120,7 @@ public class HTTPServer {
                 }
                 ligne = bfRXML.readLine();
             }
-            this.nonRestreint = this.resAutorises == null && this.resInterdits == null;
+            this.nonRestreint = this.resAutorises.isEmpty() && this.resInterdits.isEmpty();
 
             bfRXML.close();
         } catch (FileNotFoundException e) {
@@ -157,6 +161,12 @@ public class HTTPServer {
                 // demandé (pour réussir à afficher les images)
                 DataOutputStream out = new DataOutputStream(socketClient.getOutputStream());
                 // Faire la vérification des ips autorisées ou non
+
+
+                
+                InetAddress adresseClient = InetAddress.getByName(socketClient.getInetAddress().getHostAddress());
+                System.out.println(adresseClient);
+                System.out.println(refusees.estInclue(adresseClient, s.resInterdits));
                 if (s.nonRestreint || autorisees.estInclue(socketClient.getInetAddress(), s.resAutorises)) {
                     // Nécéssaire pour connaitre la requête du client, on veut récupérer le flux en
                     // provenance de lui
@@ -217,7 +227,7 @@ public class HTTPServer {
                         out.writeBytes("HTTP/1.1 404 Not Found\n");
                     }
 
-                }else if(refusees.estInclue(socketClient.getInetAddress(), s.resInterdits)){// Dans le cas où l'adresse figure parmi les adresse refusées
+                }else if(refusees.estInclue(adresseClient, s.resInterdits)){// Dans le cas où l'adresse figure parmi les adresse refusées
                     out.writeBytes("HTTP1/1 403 Forbidden\n");
                 }
                 else{// Si l'ip est tout simplement inconnue
