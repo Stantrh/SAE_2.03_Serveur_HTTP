@@ -2,7 +2,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 
-public class test{
+public class testXML{
     // public static void main(String[] args) throws IOException{
     //     BufferedReader bfRXML = new BufferedReader(new FileReader("./salut.txt")); 
     //         String ligne = bfRXML.readLine();

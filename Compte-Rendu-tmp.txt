@@ -1,2 +1,6 @@
 Pour pouvoir afficher les images, j'ai du enlever le BufferedReader et utiliser un DataOutputStream qui lui lit les octets.
+J'ai également du gérer le type de contenu dans l'en-tête que retourne le serveur au navigateur pour qu'il sache interpréter les images etc...
+
+Pour ce qui est de la vérification des adresses
+
 
