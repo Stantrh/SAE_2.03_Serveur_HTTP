@@ -5,7 +5,7 @@ import java.util.ArrayList;
 public class ComparateurIP{
 
     /**
-     * Méthode qui permet de savoir si une ip appartient à une liste de réseau
+     * Méthode qui permet de savoir si une ip appartient à une liste d'ip réseaux
      */
     // 
     public boolean estInclue(InetAddress address, ArrayList<String> l) throws UnknownHostException{

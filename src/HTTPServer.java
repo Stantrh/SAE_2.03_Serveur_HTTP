@@ -311,7 +311,7 @@ public class HTTPServer {
                         FileInputStream fich = new FileInputStream(new File(l[1]));
 
 
-                        // Si le type du fichier est autre que du texte
+                        // Si le type du fichier est image, video ou son
                         String type = typeDonnees.split("/")[0];
                         if(type.equals("image") || type.equals("video") || type.equals("audio")){
                             out.writeBytes("Content-Encoding: gzip\r\n");
@@ -324,7 +324,7 @@ public class HTTPServer {
                             }
                             gzip.finish();
                             gzip.close();
-                        }else{
+                        }else{ // sinon, on ne le compresse pas
                             out.writeBytes("\r\n");
                             // On crée un tableau qui va contenir les données à donner au navigateur pour
                             // qu'il les interprète
