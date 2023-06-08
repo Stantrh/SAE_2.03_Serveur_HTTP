@@ -1,7 +1,9 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-
+/**
+ * Cette classe permet de 
+ */
 public class Memoire {
 
     public static long afficherMemoireRAMMachine(){

@@ -1,0 +1,27 @@
+@startuml
+
+class HTTPServer{
+    {static} + String INCONNU
+    {static} + String INTERDIT
+    {static} + String RESSOURCE_NON_TROUVEE
+    {static} + String AUTORISE
+    - int : port
+    - ArrayList<String> : resAutorises
+    - ArrayList<String> : resInterdits
+    - String : root
+    - String : accessLog
+    - String : errorLog
+    - boolean : nonRestreint
+    + HTTPServer(String cheminConfig)
+    {static} - avoirTypeDonnees(String cheminFichier) : String
+    - ecrireDansFichTxt(String line, String cheminFichDest)
+    + getMemoireThread() : long
+}
+
+class Example{
+    + estInclue(InetAdress addresse, ArrayList<String> l) : boolean
+}
+
+HTTPServer - 
+
+@enduml

@@ -1,0 +1,12 @@
+----------------------
+IP du client : /127.0.0.1
+Client : GET / HTTP/1.1 Retour du serveur : HTTP/1.1 200 OK
+Elément retourné : Ressources/index.html
+----------------------
+IP du client : /127.0.0.1
+Client : GET /miniWeb.html HTTP/1.1 Retour du serveur : HTTP/1.1 200 OK
+Elément retourné : Ressources/miniWeb.html
+----------------------
+IP du client : /127.0.0.1
+Client : GET /images/n2.jpg HTTP/1.1 Retour du serveur : HTTP/1.1 200 OK
+Elément retourné : Ressources/images/n2.jpg
