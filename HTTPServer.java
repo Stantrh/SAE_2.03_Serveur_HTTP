@@ -82,7 +82,7 @@ public class HTTPServer {
                             break;
                         case "root":
                             if(tabStrLigneC.length == 1){
-                                this.root = "./";
+                                this.root = "Ressources";
                             }else{
                                 String valeur = tabStrLigneC[1];
                                 this.root = valeur;
