@@ -1,3 +1,5 @@
+import org.w3c.dom.html.HTMLDocument;
+
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
@@ -102,10 +104,10 @@ public class HTTPServer {
                             break;
                         case "root":
                             if(tabStrLigneC.length == 1){
-                                this.root = "Ressources";
+                                this.root = "Ressources"; // Par défaut c'est Ressources
                             }else{
                                 String valeur = tabStrLigneC[1];
-                                this.root = valeur;
+                                this.root = valeur; // Sinon, c'est la valeur donnée dans le fichier de configuration
                             }
                             break;
                         case "accept":
@@ -201,10 +203,18 @@ public class HTTPServer {
 
 
     public static void main(String[] args) throws Exception {
-       
+
         try {
-             // Pour plus de lisibilté on va utiliser un objet HTTPServer
-            HTTPServer s = new HTTPServer("./config.xml");
+            BufferedWriter mywebpidBW = new BufferedWriter(new FileWriter("/var/run/myweb.pid"));
+            mywebpidBW.write(Long.toString(ProcessHandle.current().pid()));
+            mywebpidBW.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            // Pour plus de lisibilté on va utiliser un objet HTTPServer
+            HTTPServer s = new HTTPServer("/etc/myweb/myweb.conf");
 
             // Cette variable prendra la valeur du chemin du dossier contenant les
             // ressources web
@@ -216,7 +226,7 @@ public class HTTPServer {
 
 
             while (true) {
-                
+
 
                 // Socket du client correspond au navigateur, celui à qui on doit tout retourner
                 // les lignes du fichier qu'il demande
@@ -242,25 +252,25 @@ public class HTTPServer {
                 // On a donc accès à la requête du client
                 BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
                 String ligne = reader.readLine(); // Première ligne de la requête du type : GET / HTTP/1.1
-                    // champs séparés par des espaces " "
-                
+                // champs séparés par des espaces " "
+
 
                 if (s.nonRestreint || autorisees.estInclue(socketClient.getInetAddress(), s.resAutorises)) {
-                    
-    
+
+
                     System.out.println("Requête du client : " + ligne); // Requête du client
-    
+
                     // l[0] contient GET, l[1] le chemin vers le fichier et l[2] la version d'HTTP
                     String[] l = ligne.split(" ");
-    
+
                     // Si le client accède au serveur via http://ip:80 sans spécifier de page, alors
                     // on lui retourne l'index de base
-    
-    
-    
+
+
+
                     // Pour vérifier si le fichier existe
                     File f = new File(s.root + l[1]);
-    
+
                     // Si le chemin demandé est soit l'index.html (par défaut) ou alors si le fichier demandé existe
                     if(l[1].equals("/") || f.exists()){
                         // Si on est dans le cas où le client demande la racine (par défaut index.html)
@@ -272,18 +282,18 @@ public class HTTPServer {
                             out.writeBytes(HTTPServer.AUTORISE);
                             String typeDonnees = avoirTypeDonnees(l[1]);
                             out.writeBytes("Content-Type: " + typeDonnees + "\r\n");
-                            out.writeBytes("Content-Encoding:" + ); 
+                            out.writeBytes("Content-Encoding:" );
                             out.writeBytes("\r\n");
                         }
                         // Lire le fichier qui a été demandé dans la requête
                         FileInputStream fich = new FileInputStream(new File(l[1]));
-    
+
                         // On crée un tableau qui va contenir les données à donner au navigateur pour
                         // qu'il les interprète
                         byte[] res = new byte[4096];
                         int nbOctets; // Nombre d'octets qu'on devra lire pour utiliser la méthode write
                         // Si nbOctets vaut -1, on est à la fin du fichier.
-    
+
                         // Tant qu'on est pas à la fin du fichier
                         while ((nbOctets = (fich.read(res))) != -1) {
                             out.write(res, 0, nbOctets);
@@ -295,13 +305,13 @@ public class HTTPServer {
                         s.ecrireDansFichTxt("Client : " + ligne + " Retour du serveur : " + HTTPServer.AUTORISE + "Elément retourné : " + l[1] + "\n", s.accessLog);
                     }else{// Si le fichier demandé n'existe pas on indique au client l'erreur 404 NOT FOUND
                         s.ecrireDansFichTxt("----------------------\n" , s.errorLog);
-                        s.ecrireDansFichTxt("IP du client : " + socketClient.getInetAddress() + "\n", s.errorLog);    
+                        s.ecrireDansFichTxt("IP du client : " + socketClient.getInetAddress() + "\n", s.errorLog);
                         s.ecrireDansFichTxt("Client : " + ligne + " Retour du serveur : " + HTTPServer.RESSOURCE_NON_TROUVEE, s.errorLog);
                         out.writeBytes(HTTPServer.RESSOURCE_NON_TROUVEE);
                     }
 
                 }else if(refusees.estInclue(adresseClient, s.resInterdits)){// Dans le cas où l'adresse figure parmi les adresse refusées
-                    s.ecrireDansFichTxt("----------------------\n", s.errorLog);    
+                    s.ecrireDansFichTxt("----------------------\n", s.errorLog);
                     s.ecrireDansFichTxt("IP du client : " + socketClient.getInetAddress() + "\n", s.errorLog);
                     s.ecrireDansFichTxt("Client : " + ligne + " Retour du serveur : " + HTTPServer.INTERDIT, s.errorLog);
                     out.writeBytes(HTTPServer.INTERDIT);
@@ -312,7 +322,7 @@ public class HTTPServer {
                     s.ecrireDansFichTxt("Client : " + ligne + " Retour du serveur : " + HTTPServer.INCONNU, s.errorLog);
                     out.writeBytes(HTTPServer.INCONNU);
                 }
-                    socketClient.close();
+                socketClient.close();
             } // Fin de la boucle true
             
 
@@ -320,6 +330,35 @@ public class HTTPServer {
             e.printStackTrace();
         }
 
+    }
+
+    private static String avoirTypeDonnees(String cheminFichier) {
+        if (cheminFichier.endsWith(".html")) {
+            return "text/html";
+        } else if (cheminFichier.endsWith(".css")) {
+            return "text/css";
+        } else if (cheminFichier.endsWith(".jpg") || cheminFichier.endsWith(".jpeg")) {
+            return "image/jpeg";
+        } else if (cheminFichier.endsWith(".gif")) {
+            return "image/gif";
+        } else {
+            return "";
+        }
+    }
+
+
+    private void ecrireDansFichTxt(String line, String cheminFichDest){
+        try{
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(cheminFichDest, true)); // l'argument true au constructeur FileWriter permet l'ajout de la ligne à la suite de ce qui est déjà dans le fichier
+            bufferedWriter.write(line);
+            bufferedWriter.close();
+        } catch (IOException e){
+            System.err.println("Erreur écriture fichier texte");;
+        }
+    }
+
+    public long getMemoireThread(){
+        return Runtime.getRuntime().freeMemory();
     }
 
 }

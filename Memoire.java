@@ -8,7 +8,8 @@ public class Memoire {
 
     public static long afficherMemoireRAMMachine(){
         try {
-            Process process = Runtime.getRuntime().exec("free -m");
+            ProcessBuilder processBuilder = new ProcessBuilder("free", "-m");
+            Process process = processBuilder.start();
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 
             String line;
@@ -25,7 +26,8 @@ public class Memoire {
 
     public static long afficherMemoireDDMachine(){
         try {
-            Process process = Runtime.getRuntime().exec("df -m");
+            ProcessBuilder processBuilder = new ProcessBuilder("df", "-m");
+            Process process = processBuilder.start();
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 
             String line;
@@ -47,9 +49,10 @@ public class Memoire {
 
     public static int afficherNbProcessus(){
         try {
-            Process process = Runtime.getRuntime().exec("top -b -n 1");
             // -b est très important car cela lance le programme en mode traitement par lots ou Batch mode sinon le processus top reste actif et scanne les autres processus donc on a pas d'output
             // -n 1 permet de spécifier le nombre de lots que l'on veut que le processus fasse
+            ProcessBuilder processBuilder = new ProcessBuilder("top", "-b", "-n", "1");
+            Process process = processBuilder.start();
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 
             String line;
