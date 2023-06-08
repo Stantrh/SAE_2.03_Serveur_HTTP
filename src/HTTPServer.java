@@ -282,7 +282,8 @@ public class HTTPServer {
 
 
                         // Si le type du fichier est autre que du texte
-                        if(!(typeDonnees.split("/")[0].equals("text"))){
+                        String type = typeDonnees.split("/")[0];
+                        if(type.equals("image") || type.equals("video") || type.equals("audio")){
                             out.writeBytes("Content-Encoding: gzip\r\n");
                             out.writeBytes("\r\n");
                             GZIPOutputStream gzip = new GZIPOutputStream(socketClient.getOutputStream());
