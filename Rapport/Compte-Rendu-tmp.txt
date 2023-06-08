@@ -29,3 +29,7 @@ Autre problème : Si on lance un java depuis le dossier DOCUMENTS avec un classp
 Donc pour régler le problème, j'ai changé dans le config xml le root.
 De plus, j'ai changé le service pour le type simple pour qu'il se relance automatiquement à chaque plantage et je l'ai enable pour qu'il se lance à chaque démarrage.
 
+
+
+// Connexion depuis son pc en wifi : impossible : problème parefeu au niveau du serveur de l'iut
+
