@@ -3,12 +3,12 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 
 public class ComparateurIP{
-    
+
     /**
      * Méthode qui permet de savoir si une ip appartient à une liste de réseau
      */
     // 
-    public boolean estInclue(InetAddress addresse, ArrayList<String> l) throws UnknownHostException{
+    public boolean estInclue(InetAddress address, ArrayList<String> l) throws UnknownHostException{
         // Méthode pour vérifier si une adresse ip est autorisée
         // Donc parcourt de la liste des réseaux et tester pour tous les réseaux tant
         // que c'est pas trouvé
@@ -29,16 +29,16 @@ public class ComparateurIP{
 
 
             byte[] subnetMaskBytes = new byte[]{
-                (byte) (masqueSousReseau >>> 24),
-                (byte) (masqueSousReseau >>> 16),
-                (byte) (masqueSousReseau >>> 8),
-                (byte) masqueSousReseau 
+                    (byte) (masqueSousReseau >>> 24),
+                    (byte) (masqueSousReseau >>> 16),
+                    (byte) (masqueSousReseau >>> 8),
+                    (byte) masqueSousReseau
             };
 
 
             // Opération ET bit à bit entre l'ip à vérifier et le masque sous réseau
             boolean appartientTmp = true;
-            byte[] addressBytes = addresse.getAddress();
+            byte[] addressBytes = address.getAddress();
             for (int k = 0; k < reseauOctets.length; k++) {
                 if ((addressBytes[k] & subnetMaskBytes[k]) != reseauOctets[k]) {
                     appartientTmp = false;
@@ -48,8 +48,8 @@ public class ComparateurIP{
             if(appartientTmp){
                 trouvee = true;
             }
-        i++;
-        } 
+            i++;
+        }
         return trouvee;
     }
 

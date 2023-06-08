@@ -2,30 +2,10 @@ import org.w3c.dom.html.HTMLDocument;
 
 import java.io.*;
 import java.net.*;
+import java.io.File;
 import java.util.ArrayList;
-import java.util.zip.GZIPOutputStream;
 
 public class HTTPServer {
-    /**
-     * Réponse du serveur à une ip non autorisée
-     */
-    public static final String INCONNU = "HTTP/1.1 401 Unauthorized\n";
-
-    /**
-     * Réponse du serveur à une ip inconnue
-     */
-    public static final String INTERDIT = "HTTP/1.1 403 Forbidden\n";
-
-    /**
-     * Réponse du serveur lorsque la ressource n'est pas trouvée
-     */
-    public static final String RESSOURCE_NON_TROUVEE = "HTTP/1.1 404 Not Found\n";
-
-    /**
-     * Réponse du serveur lorsque la ressource est bien trouvée et que l'ip du client est autorisée
-     */
-
-    public static final String AUTORISE = "HTTP/1.1 200 OK\n";
 
     /**
      * Correspond au port sur lequel le serveur écoute
@@ -64,7 +44,7 @@ public class HTTPServer {
 
     /**
      * Constructeur des configurations d'un serveur HTTP
-     * 
+     *
      * @param cheminConfig chemin du fichier config.xml
      */
     public HTTPServer(String cheminConfig) {
@@ -111,39 +91,37 @@ public class HTTPServer {
                             }
                             break;
                         case "accept":
-                        if(tabStrLigneC.length != 1){
-                            String valeur = tabStrLigneC[1];
-                            this.resAutorises.add(valeur);
-                        }
+                            if(tabStrLigneC.length != 1){
+                                String valeur = tabStrLigneC[1];
+                                this.resAutorises.add(valeur);
+                            }
                             break;
                         case "reject":
-                        if(tabStrLigneC.length != 1){
-                            String valeur = tabStrLigneC[1];
-                            this.resInterdits.add(valeur);
-                        }
+                            if(tabStrLigneC.length != 1){
+                                String valeur = tabStrLigneC[1];
+                                this.resInterdits.add(valeur);
+                            }
                             break;
                         case "acceslog":
-                        if(tabStrLigneC.length == 1){
-                            this.accessLog = "./accessLogs";
-                        }else{
-                            String valeur = tabStrLigneC[1];
-                            this.accessLog = valeur; 
-                        }
+                            if(tabStrLigneC.length == 1){
+                                this.accessLog = "./accessLogs";
+                            }else{
+                                String valeur = tabStrLigneC[1];
+                                this.accessLog = valeur;
+                            }
                             break;
                         case "errorlog":
-                        if(tabStrLigneC.length == 1){
-                            this.errorLog = "./errorLogs";
-                        }else{
-                            String valeur = tabStrLigneC[1];
-                            this.errorLog = valeur;
-                        }
+                            if(tabStrLigneC.length == 1){
+                                this.errorLog = "./errorLogs";
+                            }else{
+                                String valeur = tabStrLigneC[1];
+                                this.errorLog = valeur;
+                            }
                             break;
                     }
                 }
                 ligne = bfRXML.readLine();
             }
-            // Si les deux listes de réseaux acceptés et refusés sont vides, cela implique que le serveur n'a aucune restriction
-            // et que toutes les machines peuvent s'y connecter
             this.nonRestreint = this.resAutorises.isEmpty() && this.resInterdits.isEmpty();
 
             bfRXML.close();
@@ -157,53 +135,10 @@ public class HTTPServer {
 
     }
 
-    /**
-     * Méthode qui permet d'avoir le type du fichier à retourner
-     * @param cheminFichier correspond
-     * @return le type de contenu pour l'entête de la réponse http
-     */
-    private static String avoirTypeDonnees(String cheminFichier) {
-        if (cheminFichier.endsWith(".html")) {
-            return "text/html";
-        } else if (cheminFichier.endsWith(".css")) {
-            return "text/css";
-        } else if (cheminFichier.endsWith(".jpg") || cheminFichier.endsWith(".jpeg")) {
-            return "image/jpeg";
-        } else if (cheminFichier.endsWith(".gif")) {
-            return "image/gif";
-        } else {
-            return "";
-        }
-    }
 
-    /**
-     * Utilisée dans le main pour simplifier la gestion des flux et ne pas avoir trop de BufferedReader
-     * Elle permet d'écrire dans un fichier dont le chemin est passé en paramètres, la chaine de caractères passée aussi
-     * en paramètres
-     * @param line
-     * @param cheminFichDest
-     */
-    private void ecrireDansFichTxt(String line, String cheminFichDest){
-        try{
-            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(cheminFichDest, true)); // l'argument true au constructeur FileWriter permet l'ajout de la ligne à la suite de ce qui est déjà dans le fichier
-            bufferedWriter.write(line);
-            bufferedWriter.close();
-        } catch (IOException e){
-            System.err.println("Erreur écriture fichier texte");;
-        }
-    }
-
-    /**
-     * 
-     * @return
-     */
-    public long getMemoireThread(){
-        return Runtime.getRuntime().freeMemory();
-    }
 
 
     public static void main(String[] args) throws Exception {
-
         try {
             BufferedWriter mywebpidBW = new BufferedWriter(new FileWriter("/var/run/myweb.pid"));
             mywebpidBW.write(Long.toString(ProcessHandle.current().pid()));
@@ -222,12 +157,8 @@ public class HTTPServer {
             // On crée un socket sur le port initialisé plus haut
             ServerSocket serveur = new ServerSocket(s.port);
 
-            System.out.println("\u001B[32m" + "Serveur démarré... en attente de connexions..." + "\u001B[0m");
-
-
+            System.out.println("Serveur en attente de connexions étrangères...");
             while (true) {
-
-
                 // Socket du client correspond au navigateur, celui à qui on doit tout retourner
                 // les lignes du fichier qu'il demande
                 Socket socketClient = serveur.accept();
@@ -239,24 +170,28 @@ public class HTTPServer {
                 // On crée un flux de données binaires pour retourner au navigateur le fichier
                 // demandé (pour réussir à afficher les images)
                 DataOutputStream out = new DataOutputStream(socketClient.getOutputStream());
-
-                // Nécéssaire pour connaitre la requête du client, on veut récupérer le flux en
-                // provenance de lui
-                InputStream inputStream = socketClient.getInputStream();
-                InetAddress adresseClient = socketClient.getInetAddress();
-
-                // Une fois qu'on a la requête du client alors il faut la lire pour voir ce
-                // qu'il veut comme ressource
-                // Donc on crée un lecteur ligne par ligne qui prend en paramètre l'input du
-                // client (navigateur pour le coup)
-                // On a donc accès à la requête du client
-                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-                String ligne = reader.readLine(); // Première ligne de la requête du type : GET / HTTP/1.1
-                // champs séparés par des espaces " "
+                // Faire la vérification des ips autorisées ou non
 
 
+
+                InetAddress adresseClient = InetAddress.getByName(socketClient.getInetAddress().getHostAddress());
+                System.out.println("Adresse du client: " + adresseClient);
+                System.out.println("L'adresse du client est dans la blacklist: " + refusees.estInclue(adresseClient, s.resInterdits));
                 if (s.nonRestreint || autorisees.estInclue(socketClient.getInetAddress(), s.resAutorises)) {
+                    // Nécéssaire pour connaitre la requête du client, on veut récupérer le flux en
+                    // provenance de lui
+                    InputStream inputStream = socketClient.getInputStream();
 
+
+
+                    // Une fois qu'on a la requête du client alors il faut la lire pour voir ce
+                    // qu'il veut comme ressource
+                    // Donc on crée un lecteur ligne par ligne qui prend en paramètre l'input du
+                    // client (navigateur pour le coup)
+                    // On a donc accès à la requête du client
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                    String ligne = reader.readLine(); // Première ligne de la requête du type : GET / HTTP/1.1
+                    // champs séparés par des espaces " "
 
                     System.out.println("Requête du client : " + ligne); // Requête du client
 
@@ -276,10 +211,10 @@ public class HTTPServer {
                         // Si on est dans le cas où le client demande la racine (par défaut index.html)
                         if(l[1].equals("/")){
                             l[1] = s.root + "/index.html";
-                            out.writeBytes(HTTPServer.AUTORISE);
+                            out.writeBytes("HTTP/1.1 200 OK\n");
                         }else{
                             l[1] = s.root + l[1];
-                            out.writeBytes(HTTPServer.AUTORISE);
+                            out.writeBytes("HTTP/1.1 200 OK\n");
                             String typeDonnees = avoirTypeDonnees(l[1]);
                             out.writeBytes("Content-Type: " + typeDonnees + "\r\n");
                             out.writeBytes("\r\n");
@@ -298,33 +233,22 @@ public class HTTPServer {
                             out.write(res, 0, nbOctets);
                         }
                         fich.close();
-
-                        s.ecrireDansFichTxt("----------------------\n" , s.accessLog);
-                        s.ecrireDansFichTxt("IP du client : " + socketClient.getInetAddress() + "\n", s.accessLog);
-                        s.ecrireDansFichTxt("Client : " + ligne + " Retour du serveur : " + HTTPServer.AUTORISE + "Elément retourné : " + l[1] + "\n", s.accessLog);
                     }else{// Si le fichier demandé n'existe pas on indique au client l'erreur 404 NOT FOUND
-                        s.ecrireDansFichTxt("----------------------\n" , s.errorLog);
-                        s.ecrireDansFichTxt("IP du client : " + socketClient.getInetAddress() + "\n", s.errorLog);
-                        s.ecrireDansFichTxt("Client : " + ligne + " Retour du serveur : " + HTTPServer.RESSOURCE_NON_TROUVEE, s.errorLog);
-                        out.writeBytes(HTTPServer.RESSOURCE_NON_TROUVEE);
+                        out.writeBytes("HTTP/1.1 404 Not Found\n");
                     }
 
-                }else if(refusees.estInclue(adresseClient, s.resInterdits)){// Dans le cas où l'adresse figure parmi les adresse refusées
-                    s.ecrireDansFichTxt("----------------------\n", s.errorLog);
-                    s.ecrireDansFichTxt("IP du client : " + socketClient.getInetAddress() + "\n", s.errorLog);
-                    s.ecrireDansFichTxt("Client : " + ligne + " Retour du serveur : " + HTTPServer.INTERDIT, s.errorLog);
-                    out.writeBytes(HTTPServer.INTERDIT);
+                }else if(refusees.estInclue(adresseClient, s.resInterdits)){// Dans le cas où l'adresse figure parmi les adresses refusées
+                    out.writeBytes("HTTP1/1 403 Forbidden\n");
                 }
                 else{// Si l'ip est tout simplement inconnue
-                    s.ecrireDansFichTxt("----------------------\n", s.errorLog);
-                    s.ecrireDansFichTxt("IP du client : " + socketClient.getInetAddress() + "\n", s.errorLog);
-                    s.ecrireDansFichTxt("Client : " + ligne + " Retour du serveur : " + HTTPServer.INCONNU, s.errorLog);
-                    out.writeBytes(HTTPServer.INCONNU);
+                    out.writeBytes("HTTP1/1 401 Unauthorized\n");
                 }
                 socketClient.close();
-            } // Fin de la boucle true
-            
 
+
+
+
+            } // Fin de la boucle true
         } catch (IOException e) {
             e.printStackTrace();
         }
