@@ -102,7 +102,7 @@ public class HTTPServer {
                             break;
                         case "root":
                             if(tabStrLigneC.length == 1){
-                                this.root = "Ressources";
+                                this.root = "Ressources"; // Par défaut
                             }else{
                                 String valeur = tabStrLigneC[1];
                                 this.root = valeur;
@@ -203,16 +203,23 @@ public class HTTPServer {
     public static void main(String[] args) throws Exception {
 
         try {
+            BufferedWriter mywebpidBW = new BufferedWriter(new FileWriter("/var/run/myweb.pid"));
+            mywebpidBW.write(Long.toString(ProcessHandle.current().pid()));
+            mywebpidBW.close();
+        } catch(FileNotFoundException e){
+            System.err.println("Chemin de myweb.pid mauvais");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
             // Pour plus de lisibilté on va utiliser un objet HTTPServer
             HTTPServer s = new HTTPServer("/etc/myweb/myweb.conf");
-
-            // Cette variable prendra la valeur du chemin du dossier contenant les
-            // ressources web
 
             // On crée un socket sur le port initialisé plus haut
             ServerSocket serveur = new ServerSocket(s.port);
 
-            System.out.println("\u001B[32m" + "Serveur démarré... en attente de connexions..." + "\u001B[0m");
+            System.out.println("\u001B[34m" + "Serveur démarré... en attente de connexions..." + "\u001B[0m");
 
 
             while (true) {
@@ -232,6 +239,7 @@ public class HTTPServer {
 
                 // Nécéssaire pour connaitre la requête du client, on veut récupérer le flux en
                 // provenance de lui
+                String date = java.time.LocalDateTime.now().toString();
                 InputStream inputStream = socketClient.getInputStream();
                 InetAddress adresseClient = socketClient.getInetAddress();
 
@@ -243,19 +251,12 @@ public class HTTPServer {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
                 String ligne = reader.readLine(); // Première ligne de la requête du type : GET / HTTP/1.1
                 // champs séparés par des espaces " "
-                String date = java.time.LocalDateTime.now().toString();
-                s.ecrireDansFichTxt("Date de la requête : " + date + "\n", s.accessLog);
 
                 if (s.nonRestreint || autorisees.estInclue(socketClient.getInetAddress(), s.resAutorises)) {
-
-
                     System.out.println("Requête du client : " + ligne); // Requête du client
 
                     // l[0] contient GET, l[1] le chemin vers le fichier et l[2] la version d'HTTP
                     String[] l = ligne.split(" ");
-
-                    // Si le client accède au serveur via http://ip:80 sans spécifier de page, alors
-                    // on lui retourne l'index de base
 
 
 
@@ -267,60 +268,72 @@ public class HTTPServer {
                         // Si on est dans le cas où le client demande la racine (par défaut index.html)
                         if(l[1].equals("/")){
                             l[1] = s.root + "/index.html";
-                            out.writeBytes(HTTPServer.AUTORISE);
                         }else{
                             l[1] = s.root + l[1];
-                            out.writeBytes(HTTPServer.AUTORISE);
-                            String typeDonnees = avoirTypeDonnees(l[1]);
-                            out.writeBytes("Content-Type: " + typeDonnees + "\r\n");
-                            out.writeBytes("Content-Encoding:" );
-                            out.writeBytes("\r\n");
+
                         }
+                        out.writeBytes(HTTPServer.AUTORISE);
+                        // On récupère le type du fichier que le client veut pour agir en fonction de ce dernier
+                        String typeDonnees = avoirTypeDonnees(l[1]);
+                        out.writeBytes("Content-Type: " + typeDonnees + "\r\n");
+
                         // Lire le fichier qui a été demandé dans la requête
                         FileInputStream fich = new FileInputStream(new File(l[1]));
 
-                        // On crée un tableau qui va contenir les données à donner au navigateur pour
-                        // qu'il les interprète
-                        byte[] res = new byte[4096];
-                        int nbOctets; // Nombre d'octets qu'on devra lire pour utiliser la méthode write
-                        // Si nbOctets vaut -1, on est à la fin du fichier.
 
-                        // Tant qu'on est pas à la fin du fichier
-                        while ((nbOctets = (fich.read(res))) != -1) {
-                            out.write(res, 0, nbOctets);
+                        // Si le type du fichier est autre que du texte
+                        if(!(typeDonnees.split("/")[0].equals("text"))){
+                            out.writeBytes("Content-Encoding: gzip\r\n");
+                            out.writeBytes("\r\n");
+                            GZIPOutputStream gzip = new GZIPOutputStream(socketClient.getOutputStream());
+                            byte[] res = new byte[4096];
+                            int nbOctets;
+                            while ((nbOctets = fich.read(res)) != -1) {
+                                gzip.write(res, 0, nbOctets);
+                            }
+                            gzip.finish();
+                            gzip.close();
+                        }else{
+                            out.writeBytes("\r\n");
+                            // On crée un tableau qui va contenir les données à donner au navigateur pour
+                            // qu'il les interprète
+                            byte[] res = new byte[4096];
+                            int nbOctets; // Nombre d'octets qu'on devra lire pour utiliser la méthode write
+                            // Si nbOctets vaut -1, on est à la fin du fichier.
+                            // Tant qu'on est pas à la fin du fichier
+                            while ((nbOctets = (fich.read(res))) != -1) {
+                                out.write(res, 0, nbOctets);
+                            }
                         }
                         fich.close();
 
                         s.ecrireDansFichTxt("----------------------\n" , s.accessLog);
-                        s.ecrireDansFichTxt("IP du client : " + socketClient.getInetAddress() + "\n", s.accessLog);
+                        s.ecrireDansFichTxt("IP du client : " + socketClient.getInetAddress() + " : " + date + "\n", s.accessLog);
                         s.ecrireDansFichTxt("Client : " + ligne + " Retour du serveur : " + HTTPServer.AUTORISE + "Elément retourné : " + l[1] + "\n", s.accessLog);
                     }else{// Si le fichier demandé n'existe pas on indique au client l'erreur 404 NOT FOUND
                         s.ecrireDansFichTxt("----------------------\n" , s.errorLog);
-                        s.ecrireDansFichTxt("IP du client : " + socketClient.getInetAddress() + "\n", s.errorLog);
+                        s.ecrireDansFichTxt("IP du client : " + socketClient.getInetAddress() + " : " + date + "\n", s.errorLog);;
                         s.ecrireDansFichTxt("Client : " + ligne + " Retour du serveur : " + HTTPServer.RESSOURCE_NON_TROUVEE, s.errorLog);
                         out.writeBytes(HTTPServer.RESSOURCE_NON_TROUVEE);
                     }
 
                 }else if(refusees.estInclue(adresseClient, s.resInterdits)){// Dans le cas où l'adresse figure parmi les adresse refusées
                     s.ecrireDansFichTxt("----------------------\n", s.errorLog);
-                    s.ecrireDansFichTxt("IP du client : " + socketClient.getInetAddress() + "\n", s.errorLog);
+                    s.ecrireDansFichTxt("IP du client : " + socketClient.getInetAddress() + " : " + date + "\n", s.errorLog);
                     s.ecrireDansFichTxt("Client : " + ligne + " Retour du serveur : " + HTTPServer.INTERDIT, s.errorLog);
                     out.writeBytes(HTTPServer.INTERDIT);
                 }
                 else{// Si l'ip est tout simplement inconnue
                     s.ecrireDansFichTxt("----------------------\n", s.errorLog);
-                    s.ecrireDansFichTxt("IP du client : " + socketClient.getInetAddress() + "\n", s.errorLog);
+                    s.ecrireDansFichTxt("IP du client : " + socketClient.getInetAddress() + " : " + date + "\n", s.errorLog);
                     s.ecrireDansFichTxt("Client : " + ligne + " Retour du serveur : " + HTTPServer.INCONNU, s.errorLog);
                     out.writeBytes(HTTPServer.INCONNU);
                 }
                 socketClient.close();
             } // Fin de la boucle true
-
-
         } catch (IOException e) {
             e.printStackTrace();
         }
 
     }
-
 }
