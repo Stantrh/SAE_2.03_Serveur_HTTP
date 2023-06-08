@@ -282,7 +282,6 @@ public class HTTPServer {
                             out.writeBytes(HTTPServer.AUTORISE);
                             String typeDonnees = avoirTypeDonnees(l[1]);
                             out.writeBytes("Content-Type: " + typeDonnees + "\r\n");
-                            out.writeBytes("Content-Encoding:" );
                             out.writeBytes("\r\n");
                         }
                         // Lire le fichier qui a été demandé dans la requête
@@ -330,35 +329,6 @@ public class HTTPServer {
             e.printStackTrace();
         }
 
-    }
-
-    private static String avoirTypeDonnees(String cheminFichier) {
-        if (cheminFichier.endsWith(".html")) {
-            return "text/html";
-        } else if (cheminFichier.endsWith(".css")) {
-            return "text/css";
-        } else if (cheminFichier.endsWith(".jpg") || cheminFichier.endsWith(".jpeg")) {
-            return "image/jpeg";
-        } else if (cheminFichier.endsWith(".gif")) {
-            return "image/gif";
-        } else {
-            return "";
-        }
-    }
-
-
-    private void ecrireDansFichTxt(String line, String cheminFichDest){
-        try{
-            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(cheminFichDest, true)); // l'argument true au constructeur FileWriter permet l'ajout de la ligne à la suite de ce qui est déjà dans le fichier
-            bufferedWriter.write(line);
-            bufferedWriter.close();
-        } catch (IOException e){
-            System.err.println("Erreur écriture fichier texte");;
-        }
-    }
-
-    public long getMemoireThread(){
-        return Runtime.getRuntime().freeMemory();
     }
 
 }
