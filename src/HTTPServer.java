@@ -199,6 +199,34 @@ public class HTTPServer {
         return Runtime.getRuntime().freeMemory();
     }
 
+    public static void genererStatusServeurHTML(){
+        String memoireRAM = Memoire.castBytesForHumanReadable(Memoire.afficherMemoireRAMMachine());
+        String memoireDD = Memoire.castBytesForHumanReadable(Memoire.afficherMemoireDDMachine());
+        String nbProcessus = Integer.toString(Memoire.afficherNbProcessus());
+
+        String htmlContent =
+                "<html>\n" +
+                        "<head>\n" +
+                        "<title>Status</title>\n" +
+                        "</head>\n" +
+                        "<body>\n" +
+                        "<h1>Memoire RAM : " + memoireRAM + "</h1>\n" +
+                        "<h1>Memoire DD : " + memoireDD + "</h1>\n" +
+                        "<h1>Nombre de Processus : " + nbProcessus + "</h1>\n" +
+                        "</body>\n" +
+                        "</html>";
+
+        // Produis le fichier html dans le dossier Ressources
+        try {
+            BufferedWriter statusBW = new BufferedWriter(new FileWriter("./Ressources/status.html"));
+            statusBW.write(htmlContent);
+            statusBW.close();
+        } catch (FileNotFoundException e1) {
+            System.err.println("Les dossiers du chemin n'existent pas");
+        } catch (IOException e2){
+            System.err.println("Erreur écriture fichier HTML");
+        }
+    }
 
     public static void main(String[] args) throws Exception {
 
@@ -211,6 +239,8 @@ public class HTTPServer {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        genererStatusServeurHTML();
 
         try {
             // Pour plus de lisibilté on va utiliser un objet HTTPServer
