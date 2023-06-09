@@ -130,7 +130,7 @@ public class HTTPServer {
                             break;
                         case "acceslog":
                             if(tabStrLigneC.length == 1){
-                                this.accessLog = "./accessLogs";
+                                this.accessLog = "Logs/accessLogs";
                             }else{
                                 String valeur = tabStrLigneC[1];
                                 this.accessLog = valeur;
@@ -138,7 +138,7 @@ public class HTTPServer {
                             break;
                         case "errorlog":
                             if(tabStrLigneC.length == 1){
-                                this.errorLog = "./errorLogs";
+                                this.errorLog = "Logs/errorLogs";
                             }else{
                                 String valeur = tabStrLigneC[1];
                                 this.errorLog = valeur;
@@ -226,7 +226,7 @@ public class HTTPServer {
      */
     public void enregistrerPoidsSources(){
         // On crée un File qui contient le chemin de notre répertoire où les sources sont
-        File dossier = new File(this.root + "../src/");
+        File dossier = new File("src");
         // On met dans un tableau tous les fichiers (répertoires ou non)
         File[] files = dossier.listFiles();
 
