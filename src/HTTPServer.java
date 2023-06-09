@@ -160,7 +160,7 @@ public class HTTPServer {
      * @param cheminFichier correspond
      * @return le type de contenu pour l'entête de la réponse http
      */
-    private static String avoirTypeDonnees(String cheminFichier) {
+    private String avoirTypeDonnees(String cheminFichier) {
         if (cheminFichier.endsWith(".html")) {
             return "text/html";
         } else if (cheminFichier.endsWith(".css")) {
@@ -195,7 +195,7 @@ public class HTTPServer {
      *
      * @return
      */
-    public static void genererStatusServeurHTML(String chemin){
+    public void genererStatusServeurHTML(String chemin){
         String memoireRAM = Memoire.castBytesForHumanReadable(Memoire.afficherMemoireRAMMachine());
         String memoireDD = Memoire.castBytesForHumanReadable(Memoire.afficherMemoireDDMachine());
         String nbProcessus = Integer.toString(Memoire.afficherNbProcessus());
@@ -333,14 +333,14 @@ public class HTTPServer {
                             // Comme ça, à chaque fois que le client demande cette page, les informations qui y figurent
                             // sont mises à jour.
                             l[1] = s.root + l[1];
-                            genererStatusServeurHTML(l[1]);
+                            s.genererStatusServeurHTML(l[1]);
                         }else{
                             l[1] = s.root + l[1];
 
                         }
                         out.writeBytes(HTTPServer.AUTORISE);
                         // On récupère le type du fichier que le client veut pour agir en fonction de ce dernier
-                        String typeDonnees = avoirTypeDonnees(l[1]);
+                        String typeDonnees = s.avoirTypeDonnees(l[1]);
                         out.writeBytes("Content-Type: " + typeDonnees + "\r\n");
 
                         // Lire le fichier qui a été demandé dans la requête
