@@ -359,8 +359,10 @@ public class HTTPServer {
                             "    <h1>Status du Serveur</h1>\n" +
                             "    <div class=\"label\">Memoire RAM :</div>\n" +
                             "    <div class=\"value\">" + memoireRAM + "</div>\n" +
+                            "    <img src=\"" + this.root + "/images/memoire-RAM.png"+ "\" alt=\"Diagramme circulaire de la mémoire vive\">\n" +
                             "    <div class=\"label\">Memoire DD :</div>\n" +
                             "    <div class=\"value\">" + memoireDD + "</div>\n" +
+                            "    <img src=\"" + this.root + "/images/memoire-Disque.png" + "\" alt=\"Diagramme circulaire de la mémoire disque\">\n" +
                             "    <div class=\"label\">Nombre de Processus :</div>\n" +
                             "    <div class=\"value\">" + nbProcessus + "</div>\n" +
                             "</div>\n" +
