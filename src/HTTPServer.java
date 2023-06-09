@@ -195,30 +195,58 @@ public class HTTPServer {
      *
      * @return
      */
-    public long getMemoireThread(){
-        return Runtime.getRuntime().freeMemory();
-    }
-
-    public static void genererStatusServeurHTML(){
+    public static void genererStatusServeurHTML(String chemin){
         String memoireRAM = Memoire.castBytesForHumanReadable(Memoire.afficherMemoireRAMMachine());
         String memoireDD = Memoire.castBytesForHumanReadable(Memoire.afficherMemoireDDMachine());
         String nbProcessus = Integer.toString(Memoire.afficherNbProcessus());
 
         String htmlContent =
                 "<html>\n" +
-                        "<head>\n" +
-                        "<title>Status</title>\n" +
-                        "</head>\n" +
-                        "<body>\n" +
-                        "<h1>Memoire RAM : " + memoireRAM + "</h1>\n" +
-                        "<h1>Memoire DD : " + memoireDD + "</h1>\n" +
-                        "<h1>Nombre de Processus : " + nbProcessus + "</h1>\n" +
-                        "</body>\n" +
-                        "</html>";
+                "<head>\n" +
+                "<title>Status</title>\n" +
+                "<style>\n" +
+                "body {\n" +
+                "    background-color: #f2f2f2;\n" +
+                "    font-family: Arial, sans-serif;\n" +
+                "    padding: 20px;\n" +
+                "}\n" +
+                ".container {\n" +
+                "    max-width: 600px;\n" +
+                "    margin: 0 auto;\n" +
+                "}\n" +
+                "h1 {\n" +
+                "    color: #333333;\n" +
+                "    font-size: 24px;\n" +
+                "    margin-bottom: 20px;\n" +
+                "}\n" +
+                ".label {\n" +
+                "    font-weight: bold;\n" +
+                "    margin-bottom: 5px;\n" +
+                "}\n" +
+                ".value {\n" +
+                "    margin-bottom: 15px;\n" +
+                "}\n" +
+                "</style>\n" +
+                "</head>\n" +
+                "<body>\n" +
+                "<div class=\"container\">\n" +
+                "    <h1>Status du Serveur</h1>\n" +
+                "    <div class=\"label\">Memoire RAM :</div>\n" +
+                "    <div class=\"value\">" + memoireRAM + "</div>\n" +
+                "    <div class=\"label\">Memoire DD :</div>\n" +
+                "    <div class=\"value\">" + memoireDD + "</div>\n" +
+                "    <div class=\"label\">Nombre de Processus :</div>\n" +
+                "    <div class=\"value\">" + nbProcessus + "</div>\n" +
+                "</div>\n" +
+                "</body>\n" +
+                "</html>";
+
 
         // Produis le fichier html dans le dossier Ressources
         try {
-            BufferedWriter statusBW = new BufferedWriter(new FileWriter("./Ressources/status.html"));
+            System.out.println("chemin : " + chemin);
+            String d = chemin + "/status.html";
+            BufferedWriter statusBW = new BufferedWriter(new FileWriter(d));
             statusBW.write(htmlContent);
             statusBW.close();
         } catch (FileNotFoundException e1) {
@@ -227,6 +255,8 @@ public class HTTPServer {
             System.err.println("Erreur écriture fichier HTML");
         }
     }
+
+
 
     public static void main(String[] args) throws Exception {
 
@@ -239,8 +269,6 @@ public class HTTPServer {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        genererStatusServeurHTML();
 
         try {
             // Pour plus de lisibilté on va utiliser un objet HTTPServer
@@ -294,10 +322,18 @@ public class HTTPServer {
                     File f = new File(s.root + l[1]);
 
                     // Si le chemin demandé est soit l'index.html (par défaut) ou alors si le fichier demandé existe
-                    if(l[1].equals("/") || f.exists()){
+                    if(l[1].equals("/") || f.exists() || l[1].equals("/status.html")){
                         // Si on est dans le cas où le client demande la racine (par défaut index.html)
                         if(l[1].equals("/")){
                             l[1] = s.root + "/index.html";
+                        }else if(l[1].equals("/status.html")){
+                            System.out.println("test");
+                            // Génère la page qui contient les informations sur le status du serveur
+                            // Comme ça, à chaque fois que le client demande cette page, les informations qui y figurent
+                            // sont mises à jour.
+                            l[1] = s.root + l[1];
+                            System.out.println("ici ça marche");
+                            genererStatusServeurHTML(s.root);
                         }else{
                             l[1] = s.root + l[1];
 
