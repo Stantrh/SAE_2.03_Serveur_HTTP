@@ -421,10 +421,6 @@ public class HTTPServer {
         }
     }
 
-
-
-
-
     public static void main(String[] args) throws Exception {
 
         try {
@@ -448,8 +444,6 @@ public class HTTPServer {
             ServerSocket serveur = new ServerSocket(s.port);
 
             System.out.println("\u001B[34m" + "Serveur démarré... en attente de connexions..." + "\u001B[0m");
-
-
             while (true) {
 
 
@@ -486,8 +480,6 @@ public class HTTPServer {
                     // l[0] contient GET, l[1] le chemin vers le fichier et l[2] la version d'HTTP
                     String[] l = ligne.split(" ");
                     String nomFich = l[1];
-
-
 
                     // Pour vérifier si le fichier existe
                     File f = new File(s.root + l[1]);
@@ -549,11 +541,7 @@ public class HTTPServer {
                                 String interpreteur = e.attr("interpreteur");
                                 String code = e.text();
                                 // On exécute maintenant le code et on enregistre le résultat pour remplacer l'html
-                                System.out.println("Interpreteur : " + interpreteur);
-                                System.out.println("Code : " + code);
                                 String res = s.executerCode(interpreteur, code);
-
-
                                 e.html(res);
 
                             }
