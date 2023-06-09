@@ -1,0 +1,10 @@
+[Unit]
+Description=MyWeb Server Service
+
+[Service]
+ExecStart=/usr/local/sbin/myweb-demarrage.sh
+ExecStop=/usr/local/sbin/myweb-arret.sh
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

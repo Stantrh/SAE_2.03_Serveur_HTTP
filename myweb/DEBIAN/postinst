@@ -1,0 +1,50 @@
+#!/bin/bash
+
+# Chemin absolu du répertoire d'installation du paquet
+pkg_dir="$PWD"
+
+# Chemin du dossier src à copier
+src_dir="$pkg_dir/usr/src"
+etc_dir="$pkg_dir/usr/etc"
+scripts_dir="$pkg_dir/usr/scripts"
+
+# Chemin de destination
+dest_dir="/usr/local/sbin"
+
+
+
+echo "Installation des fichiers sources"
+# Création du dossier myweb
+sudo mkdir -p /usr/local/sbin/myweb # -p au cas où un des dossiers n'existent pas.
+sudo mkdir -p /usr/local/sbin/myweb/src/ 
+# Copie du dossier Ressources
+cp -r "$src_dir/Ressources" "/usr/local/sbin/myweb"
+# Copie des fichiers .java du dossier src vers /usr/local/sbin
+cp "$src_dir"/src/*.java "/usr/local/sbin/myweb/src"
+cp "$src_dir"/*.jar "/usr/local/sbin/myweb"
+
+echo "Installation du script myweb-arret.sh capable de lancer le serveur"
+sudo cp "$scripts_dir"/myweb-demarrage.sh /usr/local/sbin/
+sudo chmod u+x /usr/local/sbin/myweb-demarrage.sh
+
+echo "Installation du script myweb-arret.sh capable d'éteindre le serveur"
+sudo cp "$scripts_dir"/myweb-arret.sh /usr/local/sbin/
+sudo chmod u+x /usr/local/sbin/myweb-arret.sh
+
+echo "Sauvegarde des services essentiels au bon fonctionnement du système"
+sudo cp -r /etc/systemd/system /etc/systemd/system.save$(date +%Y%m%d)
+
+echo "Installation du fichier de configuration"
+sudo mkdir -p /etc/myweb/ # -p au cas où un des dossiers n'existent pas.
+sudo cp "$etc_dir"/myweb.conf /etc/myweb/
+
+echo "Installation du service myweb.service"
+sudo cp "$etc_dir"/myweb.service /etc/systemd/system/
+
+echo "Activation du démarrage automatique au lancement de la machine avec systemctl"
+
+sudo systemctl enable myweb.service
+sudo systemctl start myweb.service
+
+exit 0
+
