@@ -226,7 +226,7 @@ public class HTTPServer {
      */
     public void enregistrerPoidsSources(){
         // On crée un File qui contient le chemin de notre répertoire où les sources sont
-        File dossier = new File("/var/log/myweb/");
+        File dossier = new File(this.root + "../src/");
         // On met dans un tableau tous les fichiers (répertoires ou non)
         File[] files = dossier.listFiles();
 
