@@ -73,8 +73,8 @@ public class HTTPServer {
             boolean ouvertureWebConfTrouve = false; // --> <webconf>
             boolean fermetureWebConfTrouve = false; // --> </webconf>
 
-            this.resAutorises = new ArrayList<String>();
-            this.resInterdits = new ArrayList<String>();
+            this.resAutorises = new ArrayList<>();
+            this.resInterdits = new ArrayList<>();
 
             // Au cas où il y a des sauts de ligne inutiles au début du fichier
             while (ligne != null && !ouvertureWebConfTrouve) {
@@ -192,8 +192,8 @@ public class HTTPServer {
     }
 
     /**
-     *
-     * @return
+     * Permet de générer un fichier "status.html" qui contient les informations
+     * relatives à la mémoire du serveur
      */
     public void genererStatusServeurHTML(String chemin){
         String memoireRAM = Memoire.castBytesForHumanReadable(Memoire.afficherMemoireRAMMachine());
@@ -257,6 +257,12 @@ public class HTTPServer {
             System.err.println("Erreur écriture fichier HTML");
         }
     }
+
+
+    public String executerCode(String interpreteur, String code) {
+        return "";
+    }
+
 
 
 
@@ -334,9 +340,15 @@ public class HTTPServer {
                             // sont mises à jour.
                             l[1] = s.root + l[1];
                             s.genererStatusServeurHTML(l[1]);
+                        }else if(l[1].equals("/CodeDynamique.html")){
+                            // Dans le cas où le client souhaite obtenir la page qui contient le code dynamique
+                            l[1] = s.root + l[1];
+                            // On va stocker le contenu du fichier dans une seule ligne de caractère, car Jsoup permet
+                            // d'en extraite les balises les attributs et chaque valeur y étant associée
+                            BufferedReader fichier = new BufferedReader(new FileReader(l[1]));
+
                         }else{
                             l[1] = s.root + l[1];
-
                         }
                         out.writeBytes(HTTPServer.AUTORISE);
                         // On récupère le type du fichier que le client veut pour agir en fonction de ce dernier
