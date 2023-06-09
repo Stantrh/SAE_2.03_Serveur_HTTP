@@ -200,53 +200,55 @@ public class HTTPServer {
         String memoireDD = Memoire.castBytesForHumanReadable(Memoire.afficherMemoireDDMachine());
         String nbProcessus = Integer.toString(Memoire.afficherNbProcessus());
 
-        String htmlContent =
-                "<html>\n" +
-                "<head>\n" +
-                "<title>Status</title>\n" +
-                "<style>\n" +
-                "body {\n" +
-                "    background-color: #f2f2f2;\n" +
-                "    font-family: Arial, sans-serif;\n" +
-                "    padding: 20px;\n" +
-                "}\n" +
-                ".container {\n" +
-                "    max-width: 600px;\n" +
-                "    margin: 0 auto;\n" +
-                "}\n" +
-                "h1 {\n" +
-                "    color: #333333;\n" +
-                "    font-size: 24px;\n" +
-                "    margin-bottom: 20px;\n" +
-                "}\n" +
-                ".label {\n" +
-                "    font-weight: bold;\n" +
-                "    margin-bottom: 5px;\n" +
-                "}\n" +
-                ".value {\n" +
-                "    margin-bottom: 15px;\n" +
-                "}\n" +
-                "</style>\n" +
-                "</head>\n" +
-                "<body>\n" +
-                "<div class=\"container\">\n" +
-                "    <h1>Status du Serveur</h1>\n" +
-                "    <div class=\"label\">Memoire RAM :</div>\n" +
-                "    <div class=\"value\">" + memoireRAM + "</div>\n" +
-                "    <div class=\"label\">Memoire DD :</div>\n" +
-                "    <div class=\"value\">" + memoireDD + "</div>\n" +
-                "    <div class=\"label\">Nombre de Processus :</div>\n" +
-                "    <div class=\"value\">" + nbProcessus + "</div>\n" +
-                "</div>\n" +
-                "</body>\n" +
-                "</html>";
-
-
-        // Produis le fichier html dans le dossier Ressources
+        String htmlContent = "<html>\n" +
+                            "<head>\n" +
+                            "<title>Status</title>\n" +
+                            "<style>\n" +
+                            "body {\n" +
+                            "    background-color: #f2f2f2;\n" +
+                            "    font-family: Arial, sans-serif;\n" +
+                            "    margin: 0;\n" +
+                            "    padding: 0;\n" +
+                            "}\n" +
+                            ".container {\n" +
+                            "    max-width: 600px;\n" +
+                            "    margin: 0 auto;\n" +
+                            "    padding: 20px;\n" +
+                            "    background-color: #fff;\n" +
+                            "    border: 1px solid #ccc;\n" +
+                            "    border-radius: 4px;\n" +
+                            "    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);\n" +
+                            "}\n" +
+                            "h1 {\n" +
+                            "    color: #333333;\n" +
+                            "    font-size: 24px;\n" +
+                            "    margin-bottom: 20px;\n" +
+                            "    text-align: center;\n" +
+                            "}\n" +
+                            ".label {\n" +
+                            "    font-weight: bold;\n" +
+                            "    margin-bottom: 5px;\n" +
+                            "}\n" +
+                            ".value {\n" +
+                            "    margin-bottom: 15px;\n" +
+                            "}\n" +
+                            "</style>\n" +
+                            "</head>\n" +
+                            "<body>\n" +
+                            "<div class=\"container\">\n" +
+                            "    <h1>Status du Serveur</h1>\n" +
+                            "    <div class=\"label\">Memoire RAM :</div>\n" +
+                            "    <div class=\"value\">" + memoireRAM + "</div>\n" +
+                            "    <div class=\"label\">Memoire DD :</div>\n" +
+                            "    <div class=\"value\">" + memoireDD + "</div>\n" +
+                            "    <div class=\"label\">Nombre de Processus :</div>\n" +
+                            "    <div class=\"value\">" + nbProcessus + "</div>\n" +
+                            "</div>\n" +
+                            "</body>\n" +
+                            "</html>";
+        // Produit le fichier html dans le dossier Ressources
         try {
-            System.out.println("chemin : " + chemin);
-            String d = chemin + "/status.html";
-            BufferedWriter statusBW = new BufferedWriter(new FileWriter(d));
+            BufferedWriter statusBW = new BufferedWriter(new FileWriter(chemin));
             statusBW.write(htmlContent);
             statusBW.close();
         } catch (FileNotFoundException e1) {
@@ -327,13 +329,11 @@ public class HTTPServer {
                         if(l[1].equals("/")){
                             l[1] = s.root + "/index.html";
                         }else if(l[1].equals("/status.html")){
-                            System.out.println("test");
                             // Génère la page qui contient les informations sur le status du serveur
                             // Comme ça, à chaque fois que le client demande cette page, les informations qui y figurent
                             // sont mises à jour.
                             l[1] = s.root + l[1];
-                            System.out.println("ici ça marche");
-                            genererStatusServeurHTML(s.root);
+                            genererStatusServeurHTML(l[1]);
                         }else{
                             l[1] = s.root + l[1];
 
