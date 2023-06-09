@@ -1,0 +1,27 @@
+#!/bin/bash
+
+echo "Desinstallation des fichiers sources et des scripts pour gérer le serveur"
+# Création du dossier myweb
+sudo rm -r /usr/local/sbin/*
+
+echo "Suppression du fichier de configuration et de son dossier myweb"
+sudo rm -r /etc/myweb/
+
+echo "Suppression des fichiers de logs"
+sudo rm -r /var/log/myweb/
+
+echo "Desactivation du démarrage automatique au lancement de la machine avec systemctl"
+
+sudo systemctl stop myweb.service
+sudo systemctl disable myweb.service
+
+# Recommandé d'exécuter daemon-reload après avoir supprimé le fichier du service pour s'assurer que systemd dispose de la configuration la plus à jour.
+sudo systemctl daemon-reload
+
+echo "Suppression du fichier service myweb.service"
+sudo rm /etc/systemd/system/myweb.service
+
+sudo systemctl daemon-reload
+
+exit 0
+
