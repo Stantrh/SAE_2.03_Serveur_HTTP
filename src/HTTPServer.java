@@ -260,8 +260,8 @@ public class HTTPServer {
      * @param cheminImageSortie le dossier où l'image doit être générée
      */
     public static void genererGraphiquePieChart(long memoireTotale, long memoirePartielle, String cheminImageSortie){
-        int width = 400; // largeur image
-        int height = 400; // hauteur image
+        int width = 200; // largeur image
+        int height = 200; // hauteur image
 
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 
@@ -311,8 +311,8 @@ public class HTTPServer {
         long memoireDDTotale = Memoire.afficherMemoireDDTotalMachine();
         long memoireDDLibre = Memoire.afficherMemoireDDLibreMachine();
 
-        genererGraphiquePieChart(memoireRAMTotale, memoireRAMLibre, this.root + "images/memoire-RAM.png");
-        genererGraphiquePieChart(memoireDDTotale, memoireDDLibre, this.root + "images/memoire-Disque.png");
+        genererGraphiquePieChart(memoireRAMTotale, memoireRAMLibre, this.root + "/images/memoire-RAM.png");
+        genererGraphiquePieChart(memoireDDTotale, memoireDDLibre, this.root + "/images/memoire-Disque.png");
 
 
 
@@ -359,10 +359,10 @@ public class HTTPServer {
                             "    <h1>Status du Serveur</h1>\n" +
                             "    <div class=\"label\">Memoire RAM :</div>\n" +
                             "    <div class=\"value\">" + memoireRAM + "</div>\n" +
-                            "    <img src=\"" + this.root + "/images/memoire-RAM.png"+ "\" alt=\"Diagramme circulaire de la memoire vive\">\n" +
+                            "    <img src=\"/images/memoire-RAM.png"+ "\" alt=\"Diagramme circulaire de la memoire vive\">\n" +
                             "    <div class=\"label\">Memoire DD :</div>\n" +
                             "    <div class=\"value\">" + memoireDD + "</div>\n" +
-                            "    <img src=\"" + this.root + "/images/memoire-Disque.png" + "\" alt=\"Diagramme circulaire de la memoire disque\">\n" +
+                            "    <img src=\"/images/memoire-Disque.png" + "\" alt=\"Diagramme circulaire de la memoire disque\">\n" +
                             "    <div class=\"label\">Nombre de Processus :</div>\n" +
                             "    <div class=\"value\">" + nbProcessus + "</div>\n" +
                             "</div>\n" +
