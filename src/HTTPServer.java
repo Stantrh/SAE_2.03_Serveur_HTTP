@@ -1,3 +1,5 @@
+import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
@@ -6,6 +8,9 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+
+import javax.imageio.ImageIO;
+
 public class HTTPServer {
     /**
      * Réponse du serveur à une ip non autorisée
@@ -216,13 +221,103 @@ public class HTTPServer {
     }
 
     /**
+     * Méthode permettant de stocker dans un fichier logPoids.txt, le poids de chaque fichier source .java
+     * Ce système permettra d'éviter de compiler à chaque fois les fichiers sources du serveur au démarrage de la machine (en vérifiant que les poids n'ont pas changé dans un bash) avant de compiler
+     */
+    public void enregistrerPoidsSources(){
+        // On crée un File qui contient le chemin de notre répertoire où les sources sont
+        File dossier = new File("/var/log/myweb/");
+        // On met dans un tableau tous les fichiers (répertoires ou non)
+        File[] files = dossier.listFiles();
+
+        long poidsTotal = 0;
+        try {
+            // On va écrire dans un fichier texte le poids de tous les fichiers non répertoires de notre tableau
+            BufferedWriter logPoidsBW = new BufferedWriter(new FileWriter("/var/log/myweb/logPoids.txt"));
+            // On parcourt notre tableau
+            for (File file : files) {
+                // Si c'est un fichier et non pas un répertoire et que c'est un fichier .java alors on ajoute le poids du fichier courant au poids total
+                if (file.isFile() && file.getName().endsWith(".java")) {
+                    poidsTotal += file.length();
+                }
+            }
+            // On écris dans le fichier logPoids.txt le poids total (car c'est beaucoup plus simple de voir s'il y a un changement dans le poids total des fichiers sources plutôt
+            // que de faire correspondre chaque nom de fichier à son poids et vérifier cette correspondance dans le fichier bash.
+            logPoidsBW.write(Long.toString(poidsTotal));
+            logPoidsBW.close(); // On ferme bien évidemment le flux à la fin ! (qui pourrait bien oublier ça et se retrouver avec un fichier vide ??? Pas moi bien sûr)
+        } catch (FileNotFoundException e1){
+            System.err.println("Erreur : Les dossiers indiqués n'existent pas");
+        } catch (IOException e2){
+            System.err.println("Erreur lors de l'écriture du fichier logPoids.txt");
+        }
+
+    }
+
+    /**
+     * Genère l'image d'un diagramme circulaire à partir de deux nombres en bytes
+     * @param memoireTotale la valeur totale (la plus grande donc)
+     * @param memoirePartielle la valeur partielle (la plus petite)
+     * @param cheminImageSortie le dossier où l'image doit être générée
+     */
+    public static void genererGraphiquePieChart(long memoireTotale, long memoirePartielle, String cheminImageSortie){
+        int width = 400; // largeur image
+        int height = 400; // hauteur image
+
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+
+        // Création d'une instance Graphics2D à partir de l'image
+        Graphics2D g2d = image.createGraphics();
+
+
+        // Calculer les angles pour les portions
+        double total = memoireTotale + memoirePartielle;
+        double angle2 = (memoireTotale / total) * 360;
+        double angle1 = (memoirePartielle / total) * 360;
+
+        // Faire un fond en blanc
+        g2d.setColor(Color.WHITE);
+        g2d.fillRect(0, 0, width, height);
+
+        // Dessiner la portion la plus petite, soit memoirePartielle
+        g2d.setColor(Color.GREEN);
+        g2d.fillArc(50, 50, width - 100, height - 100, (int) angle1, (int) angle2);
+
+        // Dessiner la portion la plus grande, soit memoireTotale
+        g2d.setColor(Color.RED);
+        g2d.fillArc(50, 50, width - 100, height - 100, 0, (int) angle1);
+
+        // Libérer les ressources graphiques utilisées
+        g2d.dispose();
+
+        // On enregistre une image png du graphique
+        File output = new File(cheminImageSortie);
+        try {
+            ImageIO.write(image, "png", output);
+        } catch (IOException e) {
+            System.err.println("Erreur lors de l'enregistrement de l'image : ");
+            e.printStackTrace();
+        }
+    }
+
+
+    /**
      * Cette méthode permet de créer un fichier status html au chemin donné en paramètre
      * Il contient les informations sur la mémoire du serveur
      * @param chemin du fichier status.html
      */
     public void genererStatusServeurHTML(String chemin){
-        String memoireRAM = Memoire.castBytesForHumanReadable(Memoire.afficherMemoireRAMMachine());
-        String memoireDD = Memoire.castBytesForHumanReadable(Memoire.afficherMemoireDDMachine());
+        long memoireRAMTotale = Memoire.afficherMemoireRAMTotalMachine();
+        long memoireRAMLibre = Memoire.afficherMemoireRAMLibreMachine();
+        long memoireDDTotale = Memoire.afficherMemoireDDTotalMachine();
+        long memoireDDLibre = Memoire.afficherMemoireDDLibreMachine();
+
+        genererGraphiquePieChart(memoireRAMTotale, memoireRAMLibre, "/usr/local/sbin/myweb/Ressources/images/memoire-RAM.png");
+        genererGraphiquePieChart(memoireDDTotale, memoireDDLibre, "/usr/local/sbin/myweb/Ressources/images/memoire-Disque.png");
+
+
+
+        String memoireRAM = Memoire.castBytesForHumanReadable(memoireRAMLibre);
+        String memoireDD = Memoire.castBytesForHumanReadable(memoireDDLibre);
         String nbProcessus = Integer.toString(Memoire.afficherNbProcessus());
 
         String htmlContent = "<html>\n" +
@@ -340,9 +435,12 @@ public class HTTPServer {
             e.printStackTrace();
         }
 
+        // Pour plus de lisibilté on va utiliser un objet HTTPServer
+        HTTPServer s = new HTTPServer("/etc/myweb/myweb.conf");
+
+        s.enregistrerPoidsSources(); // Permet d'enregistrer la somme des poids des fichiers sources dans un fichier texte dans les logs
+
         try {
-            // Pour plus de lisibilté on va utiliser un objet HTTPServer
-            HTTPServer s = new HTTPServer("/etc/myweb/myweb.conf");
 
             // On crée un socket sur le port initialisé plus haut
             ServerSocket serveur = new ServerSocket(s.port);
