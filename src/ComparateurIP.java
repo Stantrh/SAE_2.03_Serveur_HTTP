@@ -4,10 +4,14 @@ import java.util.ArrayList;
 
 public class ComparateurIP{
 
+
     /**
      * Méthode qui permet de savoir si une ip appartient à une liste d'ip réseaux
+     * @param address adresse du client
+     * @param l liste des réseaux
+     * @return si l'ip appartient ou non au réseau
+     * @throws UnknownHostException
      */
-    // 
     public boolean estInclue(InetAddress address, ArrayList<String> l) throws UnknownHostException{
         // Méthode pour vérifier si une adresse ip est autorisée
         // Donc parcourt de la liste des réseaux et tester pour tous les réseaux tant
@@ -51,17 +55,6 @@ public class ComparateurIP{
             i++;
         }
         return trouvee;
-    }
-
-
-    public static void main(String[] args) throws Exception {
-        ComparateurIP c = new ComparateurIP();
-        InetAddress adresse = InetAddress.getByName("192.168.1.100");
-        String reseau = ("192.168.1.0/24");
-        ArrayList<String> l = new ArrayList<String>();
-        l.add(reseau);
-
-        System.out.println(c.estInclue(adresse, l));
     }
 
 }

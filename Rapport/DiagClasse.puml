@@ -18,10 +18,23 @@ class HTTPServer{
     + getMemoireThread() : long
 }
 
-class Example{
-    + estInclue(InetAdress addresse, ArrayList<String> l) : boolean
+class Memoire{
+  {static} + afficherMemoireRAMMachine() : long
+  {static} + afficherMemoireDDMachine() : long
+  {static} + afficherNbProcessus() : int
+  {static} + castBytesForHumanReadable(long bytes) : String
 }
 
-HTTPServer - 
+class XML{
+  {static} parseXMLLine(String line) : String[]
+}
 
+
+class ComparateurIP{
+  + estInclue(InetAddress address, ArrayList<String> l) : boolean
+}
+
+ComparateurIP "2" <-- "1" HTTPServer
+XML <-- HTTPServer
+Memoire <-- HTTPServer
 @enduml

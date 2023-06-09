@@ -2,7 +2,10 @@ import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.zip.GZIPOutputStream;
-
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 public class HTTPServer {
     /**
      * Réponse du serveur à une ip non autorisée
@@ -191,6 +194,16 @@ public class HTTPServer {
         }
     }
 
+    /**
+     * Méthode très simple qui permet d'écrire dans le fichier de logs passé en paramètres.
+     * Mise en forme avec IP du client, la date, sa requete, la réponse du serveur et la ressource renvoyée (si c'est le cas)
+     * @param ipClient
+     * @param requete
+     * @param reponse
+     * @param fichierlog
+     * @param date
+     * @param eltRetourne
+     */
     public void log(String ipClient, String requete, String reponse, String fichierlog, String date, String eltRetourne){
         ecrireDansFichTxt("----------------------\n" , fichierlog);
         ecrireDansFichTxt("IP du client : " + ipClient + " : " + date + "\n", fichierlog);
@@ -201,11 +214,11 @@ public class HTTPServer {
         }
         
     }
-    
-    
+
     /**
-     *
-     * @return
+     * Cette méthode permet de créer un fichier status html au chemin donné en paramètre
+     * Il contient les informations sur la mémoire du serveur
+     * @param chemin du fichier status.html
      */
     public void genererStatusServeurHTML(String chemin){
         String memoireRAM = Memoire.castBytesForHumanReadable(Memoire.afficherMemoireRAMMachine());
@@ -270,6 +283,49 @@ public class HTTPServer {
         }
     }
 
+    /**
+     * Méthode pour le code dynamique
+     * Exécute le code en fonction de l'interpreteur et du code qui est passé en paramètres.
+     * @param interpreteur chemin vers l'interpreteur
+     * @param code code à exécuter
+     * @return
+     */
+    public String executerCode(String interpreteur, String code) {
+        try {
+            // L'interpreteur arrive avec des guillemets, pour cela on doit faire
+            String bonInter = interpreteur.replace("«", "").replace("»", "");
+            Process process;
+            String res;
+            if(bonInter.equals("/bin/bash") || bonInter.equals("/usr/bin/python3")) {
+                process = Runtime.getRuntime().exec(new String[] { bonInter, "-c", code });
+            }else {
+                return "Interpréteur : " + interpreteur + " inconnu par ce serveur";
+            }
+            // Ensuite on veut le résultat de la commande (qui peut faire plusieurs lignes)
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            StringBuilder output = new StringBuilder(); // Pour éviter les problèmes d'incrémentation de String toujours
+            String ligne;
+            while ((ligne = reader.readLine()) != null) {
+                output.append(ligne).append("\n");
+            }
+
+            // On attend la fin de l'exécution du processus
+            int exitCode = process.waitFor();
+
+            if (exitCode == 0) { // si ça s'est bien passé alors on retourne
+                res = output.toString(); // Retourner la sortie du processus
+            } else {
+                return "Erreur d'exécution : " + exitCode;
+            }
+            return res;
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+            return "";
+        }
+    }
+
+
+
 
 
     public static void main(String[] args) throws Exception {
@@ -329,6 +385,7 @@ public class HTTPServer {
 
                     // l[0] contient GET, l[1] le chemin vers le fichier et l[2] la version d'HTTP
                     String[] l = ligne.split(" ");
+                    String nomFich = l[1];
 
 
 
@@ -372,7 +429,39 @@ public class HTTPServer {
                             }
                             gzip.finish();
                             gzip.close();
-                        }else{ // sinon, on ne le compresse pas
+                        }else if(nomFich.equals("/CodeDynamique.html")){ // Etant donné qu'un seul fichier contient des balises code
+                            out.writeBytes("\r\n");
+                            // Alors on va devoir le lire ligne par ligne et utiliser un parseur d'html pour pouvoir obtenir le contenu
+                            // Car autrement, on lit le fichier octet par octet. Là, nous allons devoir faire autrement
+                            BufferedReader bf = new BufferedReader(new FileReader(l[1]));
+                            // On crée un StringBuilder pour éviter les erreurs, car si on incrémente un String d'un autre String, cela recrée un nouvel objet
+                            StringBuilder sb = new StringBuilder();
+                            String li;
+                            while ((li = bf.readLine()) != null) {
+                                sb.append(li);
+                                sb.append("\n"); // Ajouter un saut de ligne après chaque ligne
+                            }
+                            bf.close();
+                            Document doc = Jsoup.parse(sb.toString());
+
+                            Elements codes = doc.getElementsByTag("code");
+                            for(Element e : codes){
+                                String interpreteur = e.attr("interpreteur");
+                                String code = e.text();
+                                // On exécute maintenant le code et on enregistre le résultat pour remplacer l'html
+                                System.out.println("Interpreteur : " + interpreteur);
+                                System.out.println("Code : " + code);
+                                String res = s.executerCode(interpreteur, code);
+
+
+                                e.html(res);
+
+                            }
+                            String nouveauHtml = doc.html();
+                            out.writeBytes(nouveauHtml);
+                        }
+                        else{ // sinon, on ne le compresse pas
+
                             out.writeBytes("\r\n");
                             // On crée un tableau qui va contenir les données à donner au navigateur pour
                             // qu'il les interprète
@@ -395,9 +484,8 @@ public class HTTPServer {
                         out.writeBytes(HTTPServer.RESSOURCE_NON_TROUVEE);
                     }
 
-                }else if(refusees.estInclue(adresseClient, s.resInterdits)){// Dans le cas où l'adresse figure parmi les adresse refusées
+                }else if(refusees.estInclue(adresseClient, s.resInterdits)){// Dans le cas où l'adresse ip figure parmi les adresses refusées
                     s.log(socketClient.getInetAddress().toString(), ligne, HTTPServer.INTERDIT, s.errorLog, date, null);
-                    
                     out.writeBytes(HTTPServer.INTERDIT);
                 }
                 else{// Si l'ip est tout simplement inconnue
