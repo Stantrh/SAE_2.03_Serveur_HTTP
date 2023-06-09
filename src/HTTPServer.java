@@ -73,8 +73,8 @@ public class HTTPServer {
             boolean ouvertureWebConfTrouve = false; // --> <webconf>
             boolean fermetureWebConfTrouve = false; // --> </webconf>
 
-            this.resAutorises = new ArrayList<>();
-            this.resInterdits = new ArrayList<>();
+            this.resAutorises = new ArrayList<String>();
+            this.resInterdits = new ArrayList<String>();
 
             // Au cas où il y a des sauts de ligne inutiles au début du fichier
             while (ligne != null && !ouvertureWebConfTrouve) {
@@ -191,9 +191,21 @@ public class HTTPServer {
         }
     }
 
+    public void log(String ipClient, String requete, String reponse, String fichierlog, String date, String eltRetourne){
+        ecrireDansFichTxt("----------------------\n" , fichierlog);
+        ecrireDansFichTxt("IP du client : " + ipClient + " : " + date + "\n", fichierlog);
+        if(eltRetourne == null){
+            ecrireDansFichTxt("Client : " + requete + " Retour du serveur : " + reponse, fichierlog);
+        }else{
+            ecrireDansFichTxt("Client : " + requete + " Retour du serveur : " + reponse + "Elément retourné : " + eltRetourne + "\n", fichierlog);
+        }
+        
+    }
+    
+    
     /**
-     * Permet de générer un fichier "status.html" qui contient les informations
-     * relatives à la mémoire du serveur
+     *
+     * @return
      */
     public void genererStatusServeurHTML(String chemin){
         String memoireRAM = Memoire.castBytesForHumanReadable(Memoire.afficherMemoireRAMMachine());
@@ -259,12 +271,6 @@ public class HTTPServer {
     }
 
 
-    public String executerCode(String interpreteur, String code) {
-        return "";
-    }
-
-
-
 
     public static void main(String[] args) throws Exception {
 
@@ -319,7 +325,7 @@ public class HTTPServer {
                 // champs séparés par des espaces " "
 
                 if (s.nonRestreint || autorisees.estInclue(socketClient.getInetAddress(), s.resAutorises)) {
-                    System.out.println("Requête du client : " + ligne); // Requête du client
+                    
 
                     // l[0] contient GET, l[1] le chemin vers le fichier et l[2] la version d'HTTP
                     String[] l = ligne.split(" ");
@@ -340,15 +346,9 @@ public class HTTPServer {
                             // sont mises à jour.
                             l[1] = s.root + l[1];
                             s.genererStatusServeurHTML(l[1]);
-                        }else if(l[1].equals("/CodeDynamique.html")){
-                            // Dans le cas où le client souhaite obtenir la page qui contient le code dynamique
-                            l[1] = s.root + l[1];
-                            // On va stocker le contenu du fichier dans une seule ligne de caractère, car Jsoup permet
-                            // d'en extraite les balises les attributs et chaque valeur y étant associée
-                            BufferedReader fichier = new BufferedReader(new FileReader(l[1]));
-
                         }else{
                             l[1] = s.root + l[1];
+
                         }
                         out.writeBytes(HTTPServer.AUTORISE);
                         // On récupère le type du fichier que le client veut pour agir en fonction de ce dernier
@@ -385,27 +385,23 @@ public class HTTPServer {
                             }
                         }
                         fich.close();
-
-                        s.ecrireDansFichTxt("----------------------\n" , s.accessLog);
-                        s.ecrireDansFichTxt("IP du client : " + socketClient.getInetAddress() + " : " + date + "\n", s.accessLog);
-                        s.ecrireDansFichTxt("Client : " + ligne + " Retour du serveur : " + HTTPServer.AUTORISE + "Elément retourné : " + l[1] + "\n", s.accessLog);
+                        // String requete, String reponse, String fichierlog, String date, String eltRetourne
+                        System.out.println("Requête du client : " + "\u001B[32m" + ligne + "\u001B[0m"); // Requête du client
+                        s.log(socketClient.getInetAddress().toString(), ligne, HTTPServer.AUTORISE, s.accessLog, date, l[1]);
                     }else{// Si le fichier demandé n'existe pas on indique au client l'erreur 404 NOT FOUND
-                        s.ecrireDansFichTxt("----------------------\n" , s.errorLog);
-                        s.ecrireDansFichTxt("IP du client : " + socketClient.getInetAddress() + " : " + date + "\n", s.errorLog);;
-                        s.ecrireDansFichTxt("Client : " + ligne + " Retour du serveur : " + HTTPServer.RESSOURCE_NON_TROUVEE, s.errorLog);
+                        System.out.println("Requête du client : " + "\u001B[31m" + ligne + "\u001B[0m"); // Requête du client
+                        l[1] = null;
+                        s.log(socketClient.getInetAddress().toString(), ligne, HTTPServer.RESSOURCE_NON_TROUVEE, s.errorLog, date, l[1]);
                         out.writeBytes(HTTPServer.RESSOURCE_NON_TROUVEE);
                     }
 
                 }else if(refusees.estInclue(adresseClient, s.resInterdits)){// Dans le cas où l'adresse figure parmi les adresse refusées
-                    s.ecrireDansFichTxt("----------------------\n", s.errorLog);
-                    s.ecrireDansFichTxt("IP du client : " + socketClient.getInetAddress() + " : " + date + "\n", s.errorLog);
-                    s.ecrireDansFichTxt("Client : " + ligne + " Retour du serveur : " + HTTPServer.INTERDIT, s.errorLog);
+                    s.log(socketClient.getInetAddress().toString(), ligne, HTTPServer.INTERDIT, s.errorLog, date, null);
+                    
                     out.writeBytes(HTTPServer.INTERDIT);
                 }
                 else{// Si l'ip est tout simplement inconnue
-                    s.ecrireDansFichTxt("----------------------\n", s.errorLog);
-                    s.ecrireDansFichTxt("IP du client : " + socketClient.getInetAddress() + " : " + date + "\n", s.errorLog);
-                    s.ecrireDansFichTxt("Client : " + ligne + " Retour du serveur : " + HTTPServer.INCONNU, s.errorLog);
+                    s.log(socketClient.getInetAddress().toString(), ligne, HTTPServer.INCONNU, s.errorLog, date, null);
                     out.writeBytes(HTTPServer.INCONNU);
                 }
                 socketClient.close();
