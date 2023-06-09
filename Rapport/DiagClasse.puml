@@ -16,6 +16,11 @@ class HTTPServer{
     {static} - avoirTypeDonnees(String cheminFichier) : String
     - ecrireDansFichTxt(String line, String cheminFichDest)
     + getMemoireThread() : long
+    + log(String ipClient, String requete, String reponse, String fichierlog, String date, String eltRetourne)
+    + enregistrerPoidsSources()
+    {static} + genererGraphiquePieChart(long memoireTotale, logn memoirePartielle, String cheminImageSortie)
+    + genererStatusServeurHTML(String chemin)
+    + executerCode(String interpreteur, String code) : String
 }
 
 class Memoire{
@@ -35,6 +40,6 @@ class ComparateurIP{
 }
 
 ComparateurIP "2" <-- "1" HTTPServer
-XML <-- HTTPServer
-Memoire <-- HTTPServer
+XML <-- "utilise méthode" HTTPServer
+Memoire <-- "utilise méthodes" HTTPServer
 @enduml

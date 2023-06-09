@@ -434,7 +434,8 @@ public class HTTPServer {
         }
 
         // Pour plus de lisibilté on va utiliser un objet HTTPServer
-        HTTPServer s = new HTTPServer("/etc/myweb/myweb.conf");
+        // Pour la version pour professeur, laisser ./config.xml car comme ça tout fonctionne depuis le dossier
+        HTTPServer s = new HTTPServer("src/config.xml");
 
         s.enregistrerPoidsSources(); // Permet d'enregistrer la somme des poids des fichiers sources dans un fichier texte dans les logs
 

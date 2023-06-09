@@ -1,0 +1,6 @@
+----------------------
+IP du client : /127.0.0.1 : 2023-06-09T17:30:51.401958109
+Client : GET /Ressources/images/memoire-RAM.png HTTP/1.1 Retour du serveur : HTTP/1.1 404 Not Found
+----------------------
+IP du client : /127.0.0.1 : 2023-06-09T17:30:51.402888771
+Client : GET /Ressources/images/memoire-Disque.png HTTP/1.1 Retour du serveur : HTTP/1.1 404 Not Found

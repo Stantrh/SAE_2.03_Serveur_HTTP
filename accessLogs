@@ -1,0 +1,28 @@
+----------------------
+IP du client : /127.0.0.1 : 2023-06-09T17:30:42.207133496
+Client : GET / HTTP/1.1 Retour du serveur : HTTP/1.1 200 OK
+Elément retourné : Ressources/index.html
+----------------------
+IP du client : /127.0.0.1 : 2023-06-09T17:30:46.923093832
+Client : GET /miniWeb.html HTTP/1.1 Retour du serveur : HTTP/1.1 200 OK
+Elément retourné : Ressources/miniWeb.html
+----------------------
+IP du client : /127.0.0.1 : 2023-06-09T17:30:47.002012483
+Client : GET /images/n2.jpg HTTP/1.1 Retour du serveur : HTTP/1.1 200 OK
+Elément retourné : Ressources/images/n2.jpg
+----------------------
+IP du client : /127.0.0.1 : 2023-06-09T17:30:48.313772776
+Client : GET /CodeDynamique.html HTTP/1.1 Retour du serveur : HTTP/1.1 200 OK
+Elément retourné : Ressources/CodeDynamique.html
+----------------------
+IP du client : /127.0.0.1 : 2023-06-09T17:30:49.667332713
+Client : GET /technique.html HTTP/1.1 Retour du serveur : HTTP/1.1 200 OK
+Elément retourné : Ressources/technique.html
+----------------------
+IP du client : /127.0.0.1 : 2023-06-09T17:30:49.734251310
+Client : GET /images/l1.gif HTTP/1.1 Retour du serveur : HTTP/1.1 200 OK
+Elément retourné : Ressources/images/l1.gif
+----------------------
+IP du client : /127.0.0.1 : 2023-06-09T17:30:51.115016996
+Client : GET /status.html HTTP/1.1 Retour du serveur : HTTP/1.1 200 OK
+Elément retourné : Ressources/status.html
