@@ -130,7 +130,7 @@ public class HTTPServer {
                             break;
                         case "acceslog":
                             if(tabStrLigneC.length == 1){
-                                this.accessLog = "Logs/accessLogs";
+                                this.accessLog = "Logs/accessLogs.log";
                             }else{
                                 String valeur = tabStrLigneC[1];
                                 this.accessLog = valeur;
@@ -138,7 +138,7 @@ public class HTTPServer {
                             break;
                         case "errorlog":
                             if(tabStrLigneC.length == 1){
-                                this.errorLog = "Logs/errorLogs";
+                                this.errorLog = "Logs/errorLogs.log";
                             }else{
                                 String valeur = tabStrLigneC[1];
                                 this.errorLog = valeur;
@@ -233,7 +233,7 @@ public class HTTPServer {
         long poidsTotal = 0;
         try {
             // On va écrire dans un fichier texte le poids de tous les fichiers non répertoires de notre tableau
-            BufferedWriter logPoidsBW = new BufferedWriter(new FileWriter("/var/log/myweb/logPoids.txt"));
+            BufferedWriter logPoidsBW = new BufferedWriter(new FileWriter("Logs/logPoids.txt"));
             // On parcourt notre tableau
             for (File file : files) {
                 // Si c'est un fichier et non pas un répertoire et que c'est un fichier .java alors on ajoute le poids du fichier courant au poids total
@@ -279,11 +279,11 @@ public class HTTPServer {
         g2d.fillRect(0, 0, width, height);
 
         // Dessiner la portion la plus petite, soit memoirePartielle
-        g2d.setColor(Color.GREEN);
+        g2d.setColor(Color.RED);
         g2d.fillArc(50, 50, width - 100, height - 100, (int) angle1, (int) angle2);
 
         // Dessiner la portion la plus grande, soit memoireTotale
-        g2d.setColor(Color.RED);
+        g2d.setColor(Color.GREEN);
         g2d.fillArc(50, 50, width - 100, height - 100, 0, (int) angle1);
 
         // Libérer les ressources graphiques utilisées
@@ -424,7 +424,7 @@ public class HTTPServer {
     public static void main(String[] args) throws Exception {
 
         try {
-            BufferedWriter mywebpidBW = new BufferedWriter(new FileWriter("/var/run/myweb.pid"));
+            BufferedWriter mywebpidBW = new BufferedWriter(new FileWriter("Logs/myweb.pid"));
             mywebpidBW.write(Long.toString(ProcessHandle.current().pid()));
             mywebpidBW.close();
         } catch(FileNotFoundException e){
@@ -474,113 +474,115 @@ public class HTTPServer {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
                 String ligne = reader.readLine(); // Première ligne de la requête du type : GET / HTTP/1.1
                 // champs séparés par des espaces " "
+                // On vérifie que la requête ne soit pas nulle, sinon le serveur crash car le .split provoque une erreur
+                if(ligne != null){
+                    if (s.nonRestreint || autorisees.estInclue(socketClient.getInetAddress(), s.resAutorises)) {
+                        // l[0] contient GET, l[1] le chemin vers le fichier et l[2] la version d'HTTP
+                        String[] l = ligne.split(" ");
+                        String nomFich = l[1];
 
-                if (s.nonRestreint || autorisees.estInclue(socketClient.getInetAddress(), s.resAutorises)) {
-                    
+                        // Pour vérifier si le fichier existe
+                        File f = new File(s.root + l[1]);
 
-                    // l[0] contient GET, l[1] le chemin vers le fichier et l[2] la version d'HTTP
-                    String[] l = ligne.split(" ");
-                    String nomFich = l[1];
+                        // Si le chemin demandé est soit l'index.html (par défaut) ou alors si le fichier demandé existe
+                        if(l[1].equals("/") || f.exists() || l[1].equals("/status.html")){
+                            // Si on est dans le cas où le client demande la racine (par défaut index.html)
+                            if(l[1].equals("/")){
+                                l[1] = s.root + "/index.html";
+                            }else if(l[1].equals("/status.html")){
+                                // Génère la page qui contient les informations sur le status du serveur
+                                // Comme ça, à chaque fois que le client demande cette page, les informations qui y figurent
+                                // sont mises à jour.
+                                l[1] = s.root + l[1];
+                                s.genererStatusServeurHTML(l[1]);
+                            }else{
+                                l[1] = s.root + l[1];
 
-                    // Pour vérifier si le fichier existe
-                    File f = new File(s.root + l[1]);
+                            }
+                            out.writeBytes(HTTPServer.AUTORISE);
+                            // On récupère le type du fichier que le client veut pour agir en fonction de ce dernier
+                            String typeDonnees = s.avoirTypeDonnees(l[1]);
+                            out.writeBytes("Content-Type: " + typeDonnees + "\r\n");
 
-                    // Si le chemin demandé est soit l'index.html (par défaut) ou alors si le fichier demandé existe
-                    if(l[1].equals("/") || f.exists() || l[1].equals("/status.html")){
-                        // Si on est dans le cas où le client demande la racine (par défaut index.html)
-                        if(l[1].equals("/")){
-                            l[1] = s.root + "/index.html";
-                        }else if(l[1].equals("/status.html")){
-                            // Génère la page qui contient les informations sur le status du serveur
-                            // Comme ça, à chaque fois que le client demande cette page, les informations qui y figurent
-                            // sont mises à jour.
-                            l[1] = s.root + l[1];
-                            s.genererStatusServeurHTML(l[1]);
-                        }else{
-                            l[1] = s.root + l[1];
+                            // Lire le fichier qui a été demandé dans la requête
+                            FileInputStream fich = new FileInputStream(new File(l[1]));
 
+
+                            // Si le type du fichier est image, video ou son
+                            String type = typeDonnees.split("/")[0];
+                            if(type.equals("image") || type.equals("video") || type.equals("audio")){
+                                out.writeBytes("Content-Encoding: gzip\r\n");
+                                out.writeBytes("\r\n");
+                                GZIPOutputStream gzip = new GZIPOutputStream(socketClient.getOutputStream());
+                                byte[] res = new byte[4096];
+                                int nbOctets;
+                                while ((nbOctets = fich.read(res)) != -1) {
+                                    gzip.write(res, 0, nbOctets);
+                                }
+                                gzip.finish();
+                                gzip.close();
+                            }else if(nomFich.equals("/CodeDynamique.html")){ // Etant donné qu'un seul fichier contient des balises code
+                                out.writeBytes("\r\n");
+                                // Alors on va devoir le lire ligne par ligne et utiliser un parseur d'html pour pouvoir obtenir le contenu
+                                // Car autrement, on lit le fichier octet par octet. Là, nous allons devoir faire autrement
+                                BufferedReader bf = new BufferedReader(new FileReader(l[1]));
+                                // On crée un StringBuilder pour éviter les erreurs, car si on incrémente un String d'un autre String, cela recrée un nouvel objet
+                                StringBuilder sb = new StringBuilder();
+                                String li;
+                                while ((li = bf.readLine()) != null) {
+                                    sb.append(li);
+                                    sb.append("\n"); // Ajouter un saut de ligne après chaque ligne
+                                }
+                                bf.close();
+                                Document doc = Jsoup.parse(sb.toString());
+
+                                Elements codes = doc.getElementsByTag("code");
+                                for(Element e : codes){
+                                    String interpreteur = e.attr("interpreteur");
+                                    String code = e.text();
+                                    // On exécute maintenant le code et on enregistre le résultat pour remplacer l'html
+                                    String res = s.executerCode(interpreteur, code);
+                                    e.html(res);
+
+                                }
+                                String nouveauHtml = doc.html();
+                                out.writeBytes(nouveauHtml);
+                            }
+                            else{ // sinon, on ne le compresse pas
+
+                                out.writeBytes("\r\n");
+                                // On crée un tableau qui va contenir les données à donner au navigateur pour
+                                // qu'il les interprète
+                                byte[] res = new byte[4096];
+                                int nbOctets; // Nombre d'octets qu'on devra lire pour utiliser la méthode write
+                                // Si nbOctets vaut -1, on est à la fin du fichier.
+                                // Tant qu'on est pas à la fin du fichier
+                                while ((nbOctets = (fich.read(res))) != -1) {
+                                    out.write(res, 0, nbOctets);
+                                }
+                            }
+                            fich.close();
+                            // String requete, String reponse, String fichierlog, String date, String eltRetourne
+                            System.out.println("Requête du client : " + "\u001B[32m" + ligne + "\u001B[0m"); // Requête du client
+                            s.log(socketClient.getInetAddress().toString(), ligne, HTTPServer.AUTORISE, s.accessLog, date, l[1]);
+                        }else{// Si le fichier demandé n'existe pas on indique au client l'erreur 404 NOT FOUND
+                            System.out.println("Requête du client : " + "\u001B[31m" + ligne + "\u001B[0m"); // Requête du client
+                            l[1] = null;
+                            s.log(socketClient.getInetAddress().toString(), ligne, HTTPServer.RESSOURCE_NON_TROUVEE, s.errorLog, date, l[1]);
+                            out.writeBytes(HTTPServer.RESSOURCE_NON_TROUVEE);
                         }
-                        out.writeBytes(HTTPServer.AUTORISE);
-                        // On récupère le type du fichier que le client veut pour agir en fonction de ce dernier
-                        String typeDonnees = s.avoirTypeDonnees(l[1]);
-                        out.writeBytes("Content-Type: " + typeDonnees + "\r\n");
 
-                        // Lire le fichier qui a été demandé dans la requête
-                        FileInputStream fich = new FileInputStream(new File(l[1]));
-
-
-                        // Si le type du fichier est image, video ou son
-                        String type = typeDonnees.split("/")[0];
-                        if(type.equals("image") || type.equals("video") || type.equals("audio")){
-                            out.writeBytes("Content-Encoding: gzip\r\n");
-                            out.writeBytes("\r\n");
-                            GZIPOutputStream gzip = new GZIPOutputStream(socketClient.getOutputStream());
-                            byte[] res = new byte[4096];
-                            int nbOctets;
-                            while ((nbOctets = fich.read(res)) != -1) {
-                                gzip.write(res, 0, nbOctets);
-                            }
-                            gzip.finish();
-                            gzip.close();
-                        }else if(nomFich.equals("/CodeDynamique.html")){ // Etant donné qu'un seul fichier contient des balises code
-                            out.writeBytes("\r\n");
-                            // Alors on va devoir le lire ligne par ligne et utiliser un parseur d'html pour pouvoir obtenir le contenu
-                            // Car autrement, on lit le fichier octet par octet. Là, nous allons devoir faire autrement
-                            BufferedReader bf = new BufferedReader(new FileReader(l[1]));
-                            // On crée un StringBuilder pour éviter les erreurs, car si on incrémente un String d'un autre String, cela recrée un nouvel objet
-                            StringBuilder sb = new StringBuilder();
-                            String li;
-                            while ((li = bf.readLine()) != null) {
-                                sb.append(li);
-                                sb.append("\n"); // Ajouter un saut de ligne après chaque ligne
-                            }
-                            bf.close();
-                            Document doc = Jsoup.parse(sb.toString());
-
-                            Elements codes = doc.getElementsByTag("code");
-                            for(Element e : codes){
-                                String interpreteur = e.attr("interpreteur");
-                                String code = e.text();
-                                // On exécute maintenant le code et on enregistre le résultat pour remplacer l'html
-                                String res = s.executerCode(interpreteur, code);
-                                e.html(res);
-
-                            }
-                            String nouveauHtml = doc.html();
-                            out.writeBytes(nouveauHtml);
-                        }
-                        else{ // sinon, on ne le compresse pas
-
-                            out.writeBytes("\r\n");
-                            // On crée un tableau qui va contenir les données à donner au navigateur pour
-                            // qu'il les interprète
-                            byte[] res = new byte[4096];
-                            int nbOctets; // Nombre d'octets qu'on devra lire pour utiliser la méthode write
-                            // Si nbOctets vaut -1, on est à la fin du fichier.
-                            // Tant qu'on est pas à la fin du fichier
-                            while ((nbOctets = (fich.read(res))) != -1) {
-                                out.write(res, 0, nbOctets);
-                            }
-                        }
-                        fich.close();
-                        // String requete, String reponse, String fichierlog, String date, String eltRetourne
-                        System.out.println("Requête du client : " + "\u001B[32m" + ligne + "\u001B[0m"); // Requête du client
-                        s.log(socketClient.getInetAddress().toString(), ligne, HTTPServer.AUTORISE, s.accessLog, date, l[1]);
-                    }else{// Si le fichier demandé n'existe pas on indique au client l'erreur 404 NOT FOUND
-                        System.out.println("Requête du client : " + "\u001B[31m" + ligne + "\u001B[0m"); // Requête du client
-                        l[1] = null;
-                        s.log(socketClient.getInetAddress().toString(), ligne, HTTPServer.RESSOURCE_NON_TROUVEE, s.errorLog, date, l[1]);
-                        out.writeBytes(HTTPServer.RESSOURCE_NON_TROUVEE);
+                    }else if(refusees.estInclue(adresseClient, s.resInterdits)){// Dans le cas où l'adresse ip figure parmi les adresses refusées
+                        s.log(socketClient.getInetAddress().toString(), ligne, HTTPServer.INTERDIT, s.errorLog, date, null);
+                        out.writeBytes(HTTPServer.INTERDIT);
                     }
+                    else{// Si l'ip est tout simplement inconnue
+                        s.log(socketClient.getInetAddress().toString(), ligne, HTTPServer.INCONNU, s.errorLog, date, null);
+                        out.writeBytes(HTTPServer.INCONNU);
+                    }
+                }
 
-                }else if(refusees.estInclue(adresseClient, s.resInterdits)){// Dans le cas où l'adresse ip figure parmi les adresses refusées
-                    s.log(socketClient.getInetAddress().toString(), ligne, HTTPServer.INTERDIT, s.errorLog, date, null);
-                    out.writeBytes(HTTPServer.INTERDIT);
-                }
-                else{// Si l'ip est tout simplement inconnue
-                    s.log(socketClient.getInetAddress().toString(), ligne, HTTPServer.INCONNU, s.errorLog, date, null);
-                    out.writeBytes(HTTPServer.INCONNU);
-                }
+
                 socketClient.close();
             } // Fin de la boucle true
         } catch (IOException e) {

@@ -1,8 +1,0 @@
-Package: myweb
-Version: 1.0.0
-Section: base
-Priority: optional
-Architecture: all
-Depends: bash
-Maintainer: Stephane Loppinet <stephaneloppinet@gmail.com>
-Description: Serveur HTTP
